@@ -42,6 +42,7 @@ public static class AnimationPlanFactory
         PetAction.HappyJump => 4,
         PetAction.Groom => 7,
         PetAction.Petted => 6,
+        PetAction.Feed => 7,
         PetAction.Breath => 8,
         PetAction.Blink => 8,
         PetAction.Scratch => 8,

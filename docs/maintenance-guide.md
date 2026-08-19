@@ -31,6 +31,12 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 
 發佈前確認建置 0 錯誤／警告、測試通過、EXE 可啟動、圖示為薯餅、透明置頂與拖曳正常、設定可保存、跨螢幕與縮放驗收完成。發佈資料夾不應納入版本庫。
 
+## 餵食功能
+
+`FeedingController` 管理 `PetFoodType`（Apple、Carrot、Pellet）的啟動、完成、冷卻與完成訊息；`MainWindow` 只在 Feed one-shot 完成時增加一次統計並保存。右鍵桌寵與系統匣共用「餵食薯餅」子選單。餵食序列使用 row7（與 Groom 共用），拿食物到嘴邊後完成，顯示「吃飽了！」並播放 `HappyJump`，完成後 3 秒內拒絕新餵食。
+
+餵食序列是最高優先狀態：暫停漫遊、拖曳、點擊、摸頭與其他左鍵互動；完成後才恢復原本狀態。overlay 的 apple/carrot/pellet shape 在 XAML 固定建立一次，每 tick 只更新可見性、位置與文字，不得在 render loop 建立新 shape。餵食仍可由 tray 觸發，即使 click-through 開啟。
+
 ## 設定格式
 
-設定服務目前 schema version 為 2，使用 JSON 字串列舉；新增欄位應提供預設值並在 `Normalize` 補正非法值。需要格式遷移時增加 schema 版本並保留舊版讀取路徑。
+設定服務目前 schema version 為 3，新增 `TotalFeedCount`、`LastFedUtc`、`LastFoodType`；schema 2 讀取時餵食欄位使用預設值，保持向後相容。使用 JSON 字串列舉；新增欄位應提供預設值並在 `Normalize` 補正非法值。

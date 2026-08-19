@@ -12,7 +12,8 @@ public enum PetAction
     Groom,
     Breath,
     Blink,
-    Scratch
+    Scratch,
+    Feed
 }
 
 public static class PetPriorityResolver

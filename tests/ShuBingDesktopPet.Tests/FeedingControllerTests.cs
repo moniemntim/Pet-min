@@ -1,0 +1,103 @@
+using FluentAssertions;
+using System;
+using ShuBingDesktopPet.Models;
+using ShuBingDesktopPet.Services;
+using Xunit;
+
+namespace ShuBingDesktopPet.Tests;
+
+public class FeedingControllerTests
+{
+    [Theory]
+    [InlineData(-1, 112.0)]
+    [InlineData(0, 112.0)]
+    [InlineData(5, 70.0)]
+    [InlineData(99, 70.0)]
+    public void FeedingOverlayMotion_ClampsAndReachesTheMouth(int column, double expectedY)
+    {
+        FeedingOverlayMotion.CalculateFoodTop(column, frameCount: 6).Should().Be(expectedY);
+    }
+
+    [Theory]
+    [InlineData(PetFoodType.Apple)]
+    [InlineData(PetFoodType.Carrot)]
+    [InlineData(PetFoodType.Pellet)]
+    public void FeedingController_EachSupportedFoodCanStart(PetFoodType food)
+    {
+        var controller = new FeedingController();
+
+        controller.TryStart(food, DateTime.UtcNow, isBusy: false).Should().BeTrue();
+        controller.ActiveFood.Should().Be(food);
+    }
+
+    [Fact]
+    public void FeedingController_AcceptsOnlyThreeFoodTypes()
+    {
+        var controller = new FeedingController();
+        var now = DateTime.UtcNow;
+
+        controller.TryStart(PetFoodType.Apple, now, isBusy: false).Should().BeTrue();
+        controller.IsActive.Should().BeTrue();
+        controller.TryStart(PetFoodType.Carrot, now, isBusy: false).Should().BeFalse();
+        controller.TryComplete(now, out var _).Should().BeTrue();
+
+        controller.Cancel();
+        controller.TryStart((PetFoodType)999, now, isBusy: false).Should().BeFalse();
+    }
+
+    [Fact]
+    public void FeedingController_IsRejectedWhenBusyOrActive()
+    {
+        var controller = new FeedingController();
+        var now = DateTime.UtcNow;
+
+        controller.TryStart(PetFoodType.Carrot, now, isBusy: true).Should().BeFalse();
+        controller.IsActive.Should().BeFalse();
+
+        controller.TryStart(PetFoodType.Carrot, now, isBusy: false).Should().BeTrue();
+        controller.IsActive.Should().BeTrue();
+        controller.TryStart(PetFoodType.Apple, now.AddMilliseconds(100), isBusy: false).Should().BeFalse();
+    }
+
+    [Fact]
+    public void FeedingController_HasCooldownForThreeSeconds()
+    {
+        var controller = new FeedingController();
+        var start = DateTime.UtcNow;
+
+        controller.TryStart(PetFoodType.Pellet, start, isBusy: false).Should().BeTrue();
+        controller.TryComplete(start, out _).Should().BeTrue();
+
+        controller.TryStart(PetFoodType.Apple, start.AddSeconds(2.9), isBusy: false).Should().BeFalse();
+        controller.TryStart(PetFoodType.Apple, start.AddSeconds(3), isBusy: false).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FeedingController_CompleteReturnsFoodAndShowsMessageWindow()
+    {
+        var controller = new FeedingController();
+        var start = DateTime.UtcNow;
+
+        controller.TryStart(PetFoodType.Carrot, start, isBusy: false).Should().BeTrue();
+        controller.IsCompletedMessageVisible(start).Should().BeFalse();
+        controller.TryComplete(start, out var completedFood).Should().BeTrue();
+        completedFood.Should().Be(PetFoodType.Carrot);
+        controller.IsActive.Should().BeFalse();
+        controller.IsCompletedMessageVisible(start).Should().BeTrue();
+        controller.IsCompletedMessageVisible(start.AddSeconds(2)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void FeedingController_CancelClearsActiveFoodWithoutCreatingCooldown()
+    {
+        var controller = new FeedingController();
+        var now = DateTime.UtcNow;
+
+        controller.TryStart(PetFoodType.Apple, now, isBusy: false).Should().BeTrue();
+        controller.Cancel();
+
+        controller.IsActive.Should().BeFalse();
+        controller.ActiveFood.Should().Be(PetFoodType.None);
+        controller.TryStart(PetFoodType.Carrot, now, isBusy: false).Should().BeTrue();
+    }
+}

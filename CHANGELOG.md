@@ -2,6 +2,17 @@
 
 本檔案依 SemVer 維護，最新版本置於前方。
 
+## [1.1.0] - Unreleased / RC
+
+餵食功能候選版本（分支：`agent/feeding-feature`）。
+
+### 新增
+
+- 右鍵桌寵或系統匣「餵食薯餅」：蘋果、紅蘿蔔、飼料。
+- 餵食期間暫停漫遊與其他左鍵互動；row7 將食物拿到嘴邊，完成顯示「吃飽了！」並播放 HappyJump。
+- 完成後 3 秒冷卻，`TotalFeedCount`、`LastFedUtc`、`LastFoodType` 保存於 schema 3，並相容 schema 2。
+- 固定 overlay shape 重用，避免每 tick 配置視覺資源。
+
 ## [1.0.0] - 2026-08-19
 
 餵食功能加入前的穩定基準版本。

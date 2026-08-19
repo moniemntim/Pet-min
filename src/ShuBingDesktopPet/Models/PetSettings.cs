@@ -2,7 +2,7 @@ namespace ShuBingDesktopPet.Models;
 
 public sealed record PetSettings
 {
-    public int SchemaVersion { get; init; } = 2;
+    public int SchemaVersion { get; init; } = 3;
     public bool RoamingEnabled { get; init; } = true;
     public RoamingScope RoamingScope { get; init; } = RoamingScope.CurrentScreen;
     public RoamingSpeed Speed { get; init; } = RoamingSpeed.Normal;
@@ -12,6 +12,9 @@ public sealed record PetSettings
     public string LastMonitorId { get; init; } = string.Empty;
     public double LastX { get; init; } = double.NaN;
     public double LastY { get; init; } = double.NaN;
+    public int TotalFeedCount { get; init; } = 0;
+    public DateTime? LastFedUtc { get; init; }
+    public PetFoodType LastFoodType { get; init; } = PetFoodType.None;
 }
 
 public enum RoamingScope

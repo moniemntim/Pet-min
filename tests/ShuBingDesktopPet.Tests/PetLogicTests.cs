@@ -96,7 +96,79 @@ public class PetLogicTests
         var service = new PetSettingsService(path);
 
         var loaded = service.LoadOrDefault();
-        loaded.SchemaVersion.Should().Be(2);
+        loaded.SchemaVersion.Should().Be(3);
+    }
+
+    [Fact]
+    public void PetSettingsService_NormalizeClampFeedCountAndFood()
+    {
+        var path = Path.GetTempFileName();
+        var service = new PetSettingsService(path);
+        var normalized = service.Normalize(new PetSettings
+        {
+            TotalFeedCount = -5,
+            LastFoodType = (PetFoodType)99,
+            LastFedUtc = DateTime.UtcNow.AddHours(-1)
+        });
+
+        normalized.TotalFeedCount.Should().Be(0);
+        normalized.LastFoodType.Should().Be(PetFoodType.None);
+        normalized.LastFedUtc.Should().NotBeNull();
+        normalized.LastFedUtc!.Value.Kind.Should().Be(DateTimeKind.Utc);
+    }
+
+    [Fact]
+    public void PetSettingsService_InvalidFoodEnumFromJsonFallsBackToDefault()
+    {
+        var path = Path.GetTempFileName();
+        var text = "{\"SchemaVersion\":3,\"TotalFeedCount\":12,\"LastFoodType\":\"banana\",\"Scale\":1.0,\"RoamingScope\":\"CurrentScreen\",\"Speed\":\"Normal\"}";
+        File.WriteAllText(path, text);
+
+        var service = new PetSettingsService(path);
+        var loaded = service.LoadOrDefault();
+
+        loaded.SchemaVersion.Should().Be(3);
+        loaded.TotalFeedCount.Should().Be(12);
+        loaded.LastFoodType.Should().Be(PetFoodType.None);
+    }
+
+    [Fact]
+    public void PetSettingsService_OldSchemaWithoutFeedFieldsGetsFeedDefaults()
+    {
+        var path = Path.GetTempFileName();
+        File.WriteAllText(path, "{\"SchemaVersion\":2,\"RoamingEnabled\":false,\"Scale\":1.25}");
+
+        var loaded = new PetSettingsService(path).LoadOrDefault();
+
+        loaded.SchemaVersion.Should().Be(3);
+        loaded.RoamingEnabled.Should().BeFalse();
+        loaded.Scale.Should().Be(1.25);
+        loaded.TotalFeedCount.Should().Be(0);
+        loaded.LastFedUtc.Should().BeNull();
+        loaded.LastFoodType.Should().Be(PetFoodType.None);
+    }
+
+    [Fact]
+    public void PetSettingsService_FeedFieldsRoundTripAsUtcAndCamelCaseEnum()
+    {
+        var path = Path.GetTempFileName();
+        var service = new PetSettingsService(path);
+        var fedAt = new DateTime(2026, 8, 19, 12, 34, 56, DateTimeKind.Utc);
+
+        service.Save(new PetSettings
+        {
+            TotalFeedCount = 7,
+            LastFedUtc = fedAt,
+            LastFoodType = PetFoodType.Carrot
+        });
+
+        var json = File.ReadAllText(path);
+        json.Should().Contain("\"LastFoodType\": \"carrot\"");
+        var loaded = service.LoadOrDefault();
+        loaded.TotalFeedCount.Should().Be(7);
+        loaded.LastFedUtc.Should().Be(fedAt);
+        loaded.LastFedUtc!.Value.Kind.Should().Be(DateTimeKind.Utc);
+        loaded.LastFoodType.Should().Be(PetFoodType.Carrot);
     }
 
     [Theory]
@@ -128,6 +200,16 @@ public class PetLogicTests
     {
         AnimationPlanFactory.ReactionRow(PetAction.Groom).Should().Be(7);
         AnimationPlanFactory.ReactionRow(PetAction.Petted).Should().Be(6);
+        AnimationPlanFactory.ReactionRow(PetAction.Feed).Should().Be(7);
+    }
+
+    [Fact]
+    public void AnimationPlanFactory_FeedActionIsRowSevenOneShot()
+    {
+        var plan = AnimationPlanFactory.CreateRowPlanForAction(PetAction.Feed);
+        plan.Row.Should().Be(7);
+        plan.IsOneShot.Should().BeTrue();
+        plan.Loop.Should().BeFalse();
     }
 
     [Fact]

@@ -2,11 +2,11 @@
 
 ## 版本基準
 
-採用 Semantic Versioning 2.0.0：`MAJOR.MINOR.PATCH`。
+採用 Semantic Versioning 2.0.0：`MAJOR.MINOR.PATCH`。目前餵食功能位於 `agent/feeding-feature`，版本為 `v1.1.0` 候選；`v1.0.0` tag/release 是穩定回復基準。
 
 - `v1.0.0`：目前餵食功能加入前的穩定基準。
 - `MAJOR`：不相容的設定格式、資產契約或使用方式變更。
-- `MINOR`：向後相容的新功能，例如餵食功能預計為 `v1.1.0`。
+- `MINOR`：向後相容的新功能，例如本次餵食功能為 `v1.1.0`。
 - `PATCH`：向後相容的修正、資源釋放、錯誤修補或文件修正。
 
 提交訊息使用動詞開頭，例如 `feat: add feeding interaction`、`fix: clamp roaming boundary`、`docs: update handover guide`。每次提交只處理一個可說明的變更；不要提交使用者設定、建置輸出或暫存 QA 檔。

@@ -37,6 +37,35 @@
                 <Line X1="132" Y1="58" X2="118" Y2="64" Stroke="#A06E44" StrokeThickness="2" />
                 <Ellipse Width="30" Height="12" Fill="#FF9AAE8A" Canvas.Left="81" Canvas.Top="82" />
             </Canvas>
+            <Canvas x:Name="FeedOverlay" Width="192" Height="208" IsHitTestVisible="False" Visibility="Collapsed">
+                <Canvas x:Name="FeedApple" Width="30" Height="32" Canvas.Left="81" Visibility="Collapsed">
+                    <Ellipse Width="22" Height="22" Fill="#D93636" Stroke="#8D1E1E" StrokeThickness="1" Canvas.Left="4" Canvas.Top="8" />
+                    <Rectangle Width="3" Height="8" Fill="#5D3A1A" RadiusX="1" RadiusY="1" Canvas.Left="14" Canvas.Top="2" />
+                    <Ellipse Width="10" Height="6" Fill="#63A844" RenderTransformOrigin="0,0.5" Canvas.Left="16" Canvas.Top="3">
+                        <Ellipse.RenderTransform><RotateTransform Angle="-24" /></Ellipse.RenderTransform>
+                    </Ellipse>
+                </Canvas>
+                <Canvas x:Name="FeedCarrot" Width="32" Height="42" Canvas.Left="80" Visibility="Collapsed">
+                    <Path x:Name="FeedCarrotBody" Fill="#F58232" Stroke="#B84C13" StrokeThickness="1" Data="M7,12 C11,7 24,7 27,12 C25,23 18,33 11,40 C10,29 7,21 7,12 Z" />
+                    <Path x:Name="FeedCarrotTop" Fill="#69A83A" Data="M15,11 L10,2 L16,7 L17,0 L20,8 L27,3 L23,12 Z" />
+                </Canvas>
+                <Canvas x:Name="FeedPellet" Width="34" Height="30" Canvas.Left="79" Visibility="Collapsed">
+                    <Ellipse Width="8" Height="8" Fill="#8A6544" Canvas.Left="6" Canvas.Top="3" />
+                    <Ellipse Width="8" Height="8" Fill="#9A724B" Canvas.Left="14" Canvas.Top="1" />
+                    <Ellipse Width="8" Height="8" Fill="#765338" Canvas.Left="22" Canvas.Top="4" />
+                    <Path Fill="#B88455" Stroke="#6F482A" StrokeThickness="1" Data="M2,9 L32,9 L27,27 L7,27 Z" />
+                    <Ellipse Width="30" Height="9" Fill="#D2A06D" Stroke="#6F482A" StrokeThickness="1" Canvas.Left="2" Canvas.Top="6" />
+                    <Ellipse Width="6" Height="6" Fill="#765338" Canvas.Left="8" Canvas.Top="8" />
+                    <Ellipse Width="6" Height="6" Fill="#8A6544" Canvas.Left="15" Canvas.Top="7" />
+                    <Ellipse Width="6" Height="6" Fill="#765338" Canvas.Left="22" Canvas.Top="9" />
+                </Canvas>
+                <TextBlock x:Name="FeedStatusText" Foreground="White" FontFamily="Segoe UI" FontSize="14" FontWeight="SemiBold"
+                           TextAlignment="Center" Width="192" Canvas.Top="24" TextWrapping="Wrap" Opacity="0.95">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="3" ShadowDepth="1" Opacity="0.85" />
+                    </TextBlock.Effect>
+                </TextBlock>
+            </Canvas>
         </Grid>
     </Viewbox>
 </Window>

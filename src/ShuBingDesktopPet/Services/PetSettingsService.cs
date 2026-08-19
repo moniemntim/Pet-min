@@ -8,11 +8,12 @@ namespace ShuBingDesktopPet.Services;
 
 public sealed class PetSettingsService
 {
-    private const int CurrentSchemaVersion = 2;
+    private const int CurrentSchemaVersion = 3;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+        Converters = { new PetFoodTypeJsonConverter(), new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
     public string SettingsPath { get; }
@@ -87,6 +88,13 @@ public sealed class PetSettingsService
         var y = double.IsFinite(settings.LastY) ? settings.LastY : double.NaN;
 
         var monitor = settings.LastMonitorId?.Trim() ?? string.Empty;
+        var totalFeedCount = Math.Max(0, settings.TotalFeedCount);
+        var lastFoodType = settings.LastFoodType switch
+        {
+            PetFoodType.None or PetFoodType.Apple or PetFoodType.Carrot or PetFoodType.Pellet => settings.LastFoodType,
+            _ => PetFoodType.None
+        };
+        var lastFedUtc = settings.LastFedUtc?.ToUniversalTime();
 
         return new PetSettings
         {
@@ -99,7 +107,57 @@ public sealed class PetSettingsService
             StartWithWindows = settings.StartWithWindows,
             LastMonitorId = monitor,
             LastX = x,
-            LastY = y
+            LastY = y,
+            TotalFeedCount = totalFeedCount,
+            LastFedUtc = lastFedUtc,
+            LastFoodType = lastFoodType
         };
+    }
+}
+
+internal sealed class PetFoodTypeJsonConverter : JsonConverter<PetFoodType>
+{
+    public override PetFoodType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return PetFoodType.None;
+        }
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var raw = reader.GetString();
+            if (raw is null)
+            {
+                return PetFoodType.None;
+            }
+
+            if (Enum.TryParse(raw, ignoreCase: true, out PetFoodType parsed)
+                && Enum.IsDefined(typeof(PetFoodType), parsed))
+            {
+                return parsed;
+            }
+        }
+
+        if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var value))
+        {
+            if (Enum.IsDefined(typeof(PetFoodType), value))
+            {
+                return (PetFoodType)value;
+            }
+        }
+
+        return PetFoodType.None;
+    }
+
+    public override void Write(Utf8JsonWriter writer, PetFoodType value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value switch
+        {
+            PetFoodType.Apple => "apple",
+            PetFoodType.Carrot => "carrot",
+            PetFoodType.Pellet => "pellet",
+            _ => "none"
+        });
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -39,6 +40,8 @@ public partial class MainWindow : Window
     private ToolStripMenuItem _menuRoaming = null!;
     private ToolStripMenuItem _menuClickThrough = null!;
     private ToolStripMenuItem _menuStartWithWindows = null!;
+    private ToolStripMenuItem _menuFeed = null!;
+    private readonly FeedingController _feedingController = new();
 
     private PetSettings _settings;
     private double _frameWidth = 192;
@@ -64,6 +67,7 @@ public partial class MainWindow : Window
     private int _cachedRenderedCol = -1;
 
     private PetAction? _reaction;
+    private bool _feedCelebrationActive;
     private DateTime _nextNaturalActionUtc = DateTime.UtcNow.AddSeconds(4);
     private double _cursorPollMs;
 
@@ -80,6 +84,8 @@ public partial class MainWindow : Window
     private const double GazeDistanceDip = 420.0;
     private const double SafeMarginPx = 12.0;
     private const double RoamingNoProgressMs = 250.0;
+    private const double FeedFoodStartY = 112.0;
+    private const double FeedFoodMouthY = 70.0;
 
     public MainWindow()
     {
@@ -174,6 +180,13 @@ public partial class MainWindow : Window
         });
 
         var settingsItem = new ToolStripMenuItem("設定", null, (_, _) => _settingsWindow.ShowFrom(_settings));
+        var feedApple = new ToolStripMenuItem("蘋果", null, (_, _) => TryStartFeeding(PetFoodType.Apple));
+        var feedCarrot = new ToolStripMenuItem("紅蘿蔔", null, (_, _) => TryStartFeeding(PetFoodType.Carrot));
+        var feedPellet = new ToolStripMenuItem("飼料", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
+        _menuFeed = new ToolStripMenuItem("餵食薯餅");
+        _menuFeed.DropDownItems.Add(feedApple);
+        _menuFeed.DropDownItems.Add(feedCarrot);
+        _menuFeed.DropDownItems.Add(feedPellet);
         var moveHome = new ToolStripMenuItem("回到主螢幕", null, (_, _) => MoveToPrimaryMonitor());
 
         var exit = new ToolStripMenuItem("退出", null, (_, _) => global::System.Windows.Application.Current?.Shutdown());
@@ -181,6 +194,7 @@ public partial class MainWindow : Window
         _trayMenu.Items.Add(_menuVisible);
         _trayMenu.Items.Add(_menuRoaming);
         _trayMenu.Items.Add(_menuClickThrough);
+        _trayMenu.Items.Add(_menuFeed);
         _trayMenu.Items.Add(settingsItem);
         _trayMenu.Items.Add(_menuStartWithWindows);
         _trayMenu.Items.Add(moveHome);
@@ -314,6 +328,7 @@ public partial class MainWindow : Window
     {
         var deltaMs = Math.Max(1.0, _clock.Elapsed.TotalMilliseconds);
         _clock.Restart();
+        var now = DateTime.UtcNow;
 
         UpdateCursorBehavior(deltaMs);
         UpdateRoaming(deltaMs);
@@ -325,11 +340,34 @@ public partial class MainWindow : Window
 
             if (_sequencer.CompletedOneShot && _reaction is not null && plan.IsOneShot)
             {
-                SetReaction(null);
+                if (_reaction == PetAction.Feed && _feedingController.TryComplete(now, out var completedFood))
+                {
+                    _settings = _settingsService.Normalize(_settings with
+                    {
+                        TotalFeedCount = _settings.TotalFeedCount < int.MaxValue
+                            ? _settings.TotalFeedCount + 1
+                            : int.MaxValue,
+                        LastFedUtc = now,
+                        LastFoodType = completedFood
+                    });
+                    _settingsService.Save(_settings);
+                    _feedCelebrationActive = true;
+                    SetReaction(PetAction.HappyJump);
+                }
+                else if (_reaction == PetAction.HappyJump && _feedCelebrationActive)
+                {
+                    _feedCelebrationActive = false;
+                    SetReaction(null);
+                }
+                else
+                {
+                    SetReaction(null);
+                }
             }
         }
 
         RenderFrame();
+        RenderFeedOverlay(now);
     }
 
     private AnimationPlan ResolveAnimationPlan()
@@ -386,6 +424,13 @@ public partial class MainWindow : Window
 
     private void UpdateCursorBehavior(double dtMs)
     {
+        if (IsFeedingSequenceActive)
+        {
+            _headZoneReady = false;
+            _headSweepCount = 0;
+            return;
+        }
+
         _cursorPollMs += dtMs;
         if (_cursorPollMs < 80.0)
         {
@@ -568,7 +613,7 @@ public partial class MainWindow : Window
 
     private void OnMouseDown(object sender, WpfMouseButtonEventArgs e)
     {
-        if (_settings.ClickThrough)
+        if (_settings.ClickThrough || IsFeedingSequenceActive)
         {
             return;
         }
@@ -662,6 +707,10 @@ public partial class MainWindow : Window
 
         _dragCandidate = false;
         ReleaseMouseCapture();
+        if (IsFeedingSequenceActive)
+        {
+            return;
+        }
 
         var decision = _clickArbiter.OnMouseUp(e.ClickCount, DateTime.UtcNow);
 
@@ -693,9 +742,28 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void TryStartFeeding(PetFoodType foodType)
+    {
+        var now = DateTime.UtcNow;
+        var blocked = _dragging || _dragCandidate || _reaction is not null;
+        if (_feedingController.TryStart(foodType, now, blocked))
+        {
+            _singleClickTimer.Stop();
+            _clickArbiter.CancelPending();
+            _feedCelebrationActive = false;
+            SetReaction(PetAction.Feed);
+        }
+    }
+
     private void OnSingleClickTimerTick(object? sender, EventArgs e)
     {
         _singleClickTimer.Stop();
+        if (IsFeedingSequenceActive)
+        {
+            _clickArbiter.CancelPending();
+            return;
+        }
+
         if (_clickArbiter.TryConsumeWave(DateTime.UtcNow))
         {
             SetReaction(PetAction.Wave);
@@ -745,6 +813,55 @@ public partial class MainWindow : Window
             var offset = AnimationVisualOffset.GetFrameOffset(boundedRow, boundedCol);
             frameTranslateTransform.X = offset.TranslateX;
             frameTranslateTransform.Y = offset.TranslateY;
+        }
+    }
+
+    private void RenderFeedOverlay(DateTime nowUtc)
+    {
+        FeedApple.Visibility = Visibility.Collapsed;
+        FeedCarrot.Visibility = Visibility.Collapsed;
+        FeedPellet.Visibility = Visibility.Collapsed;
+
+        var isFeeding = _feedingController.IsActive;
+        var isMessageVisible = _feedingController.IsCompletedMessageVisible(nowUtc);
+
+        if (!isFeeding && !isMessageVisible)
+        {
+            FeedOverlay.Visibility = Visibility.Collapsed;
+            FeedStatusText.Text = string.Empty;
+            return;
+        }
+
+        FeedOverlay.Visibility = Visibility.Visible;
+        FeedStatusText.TextAlignment = TextAlignment.Center;
+        FeedStatusText.Text = isFeeding ? "餵食中" : "吃飽了！";
+
+        if (!isFeeding)
+        {
+            return;
+        }
+
+        var frameCount = _rows.TryGetValue(7, out var feedSpec) ? feedSpec.FrameCount : 6;
+        var foodY = FeedingOverlayMotion.CalculateFoodTop(
+            _sequencer.Column,
+            frameCount,
+            FeedFoodStartY,
+            FeedFoodMouthY);
+
+        switch (_feedingController.ActiveFood)
+        {
+            case PetFoodType.Apple:
+                FeedApple.Visibility = Visibility.Visible;
+                Canvas.SetTop(FeedApple, foodY);
+                break;
+            case PetFoodType.Carrot:
+                FeedCarrot.Visibility = Visibility.Visible;
+                Canvas.SetTop(FeedCarrot, foodY);
+                break;
+            case PetFoodType.Pellet:
+                FeedPellet.Visibility = Visibility.Visible;
+                Canvas.SetTop(FeedPellet, foodY);
+                break;
         }
     }
 
@@ -1035,6 +1152,8 @@ public partial class MainWindow : Window
         }
 
         _disposed = true;
+        _feedingController.Cancel();
+        _feedCelebrationActive = false;
         _tickTimer.Stop();
         _singleClickTimer.Stop();
         Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
@@ -1062,4 +1181,6 @@ public partial class MainWindow : Window
 
         _reaction = action;
     }
+
+    private bool IsFeedingSequenceActive => _feedingController.IsActive || _feedCelebrationActive;
 }
