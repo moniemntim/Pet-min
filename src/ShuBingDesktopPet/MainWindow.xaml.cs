@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     private readonly ClickArbiter _clickArbiter;
     private readonly Dictionary<int, AnimationRowSpec> _rows = new();
     private readonly SpriteFrameCache? _frameCache;
+    private readonly FeedingFrameCache _feedingFrameCache;
     private readonly AnimationSequencer _sequencer = new();
     private readonly ContextMenuStrip _trayMenu = new();
     private ToolStripMenuItem _menuVisible = null!;
@@ -65,6 +66,7 @@ public partial class MainWindow : Window
     private int _headSweepCount;
     private int _cachedRenderedRow = -1;
     private int _cachedRenderedCol = -1;
+    private BitmapSource? _cachedRenderedFrame;
 
     private PetAction? _reaction;
     private bool _feedCelebrationActive;
@@ -84,9 +86,6 @@ public partial class MainWindow : Window
     private const double GazeDistanceDip = 420.0;
     private const double SafeMarginPx = 12.0;
     private const double RoamingNoProgressMs = 250.0;
-    private const double FeedFoodStartY = 112.0;
-    private const double FeedFoodMouthY = 70.0;
-
     public MainWindow()
     {
         InitializeComponent();
@@ -98,6 +97,7 @@ public partial class MainWindow : Window
         {
             _frameCache = new SpriteFrameCache(spriteSource, _sprite.Rows, _sprite.Columns, _sprite.FrameWidth, _sprite.FrameHeight);
         }
+        _feedingFrameCache = new FeedingFrameCache();
 
         _settingsWindow = new PetSettingsWindow(_settings, ApplySettingsRequested);
 
@@ -781,47 +781,63 @@ public partial class MainWindow : Window
 
         var boundedRow = Math.Clamp(_sequencer.Row, 0, Math.Max(0, _sprite.Rows - 1));
         var boundedCol = Math.Clamp(_sequencer.Column, 0, Math.Max(0, _sprite.Columns - 1));
-        if (_frameCache is { } frameCache)
+        if (_frameCache is not { } frameCache)
         {
-            var frame = frameCache.GetFrame(boundedRow, boundedCol);
-            if (frame is not null)
+            FrameImage.Source = null;
+            return;
+        }
+
+        var isFeedRender = _reaction == PetAction.Feed && _feedingController.IsActive;
+        var feedingFrame = isFeedRender
+            ? _feedingFrameCache.GetFrame(_feedingController.ActiveFood, boundedCol)
+            : null;
+        var usingFeedingFrame = feedingFrame is not null;
+        BitmapSource? frame = feedingFrame ?? frameCache.GetFrame(boundedRow, boundedCol);
+
+        if (frame is not null)
+        {
+            if (_cachedRenderedRow != boundedRow || _cachedRenderedCol != boundedCol || !ReferenceEquals(_cachedRenderedFrame, frame))
             {
-                if (_cachedRenderedRow != boundedRow || _cachedRenderedCol != boundedCol)
-                {
-                    FrameImage.Source = frame;
-                }
+                FrameImage.Source = frame;
             }
-            else
-            {
-                FrameImage.Source = null;
-            }
+        }
+        else
+        {
+            FrameImage.Source = null;
         }
 
         FrameImage.Visibility = Visibility.Visible;
         FallbackCanvas.Visibility = Visibility.Hidden;
         _cachedRenderedRow = boundedRow;
         _cachedRenderedCol = boundedCol;
+        _cachedRenderedFrame = frame;
         if (FrameImageScaleTransform is ScaleTransform frameScaleTransform)
         {
-            var scale = AnimationVisualScale.GetFrameScale(boundedRow);
+            var scale = usingFeedingFrame
+                ? new AnimationFrameScale(1, 1)
+                : AnimationVisualScale.GetFrameScale(boundedRow);
             frameScaleTransform.ScaleX = scale.ScaleX;
             frameScaleTransform.ScaleY = scale.ScaleY;
         }
 
         if (FrameImageTranslateTransform is TranslateTransform frameTranslateTransform)
         {
-            var offset = AnimationVisualOffset.GetFrameOffset(boundedRow, boundedCol);
-            frameTranslateTransform.X = offset.TranslateX;
-            frameTranslateTransform.Y = offset.TranslateY;
+            if (usingFeedingFrame)
+            {
+                frameTranslateTransform.X = 0;
+                frameTranslateTransform.Y = 0;
+            }
+            else
+            {
+                var offset = AnimationVisualOffset.GetFrameOffset(boundedRow, boundedCol);
+                frameTranslateTransform.X = offset.TranslateX;
+                frameTranslateTransform.Y = offset.TranslateY;
+            }
         }
     }
 
     private void RenderFeedOverlay(DateTime nowUtc)
     {
-        FeedApple.Visibility = Visibility.Collapsed;
-        FeedCarrot.Visibility = Visibility.Collapsed;
-        FeedPellet.Visibility = Visibility.Collapsed;
-
         var isFeeding = _feedingController.IsActive;
         var isMessageVisible = _feedingController.IsCompletedMessageVisible(nowUtc);
 
@@ -835,34 +851,6 @@ public partial class MainWindow : Window
         FeedOverlay.Visibility = Visibility.Visible;
         FeedStatusText.TextAlignment = TextAlignment.Center;
         FeedStatusText.Text = isFeeding ? "餵食中" : "吃飽了！";
-
-        if (!isFeeding)
-        {
-            return;
-        }
-
-        var frameCount = _rows.TryGetValue(7, out var feedSpec) ? feedSpec.FrameCount : 6;
-        var foodY = FeedingOverlayMotion.CalculateFoodTop(
-            _sequencer.Column,
-            frameCount,
-            FeedFoodStartY,
-            FeedFoodMouthY);
-
-        switch (_feedingController.ActiveFood)
-        {
-            case PetFoodType.Apple:
-                FeedApple.Visibility = Visibility.Visible;
-                Canvas.SetTop(FeedApple, foodY);
-                break;
-            case PetFoodType.Carrot:
-                FeedCarrot.Visibility = Visibility.Visible;
-                Canvas.SetTop(FeedCarrot, foodY);
-                break;
-            case PetFoodType.Pellet:
-                FeedPellet.Visibility = Visibility.Visible;
-                Canvas.SetTop(FeedPellet, foodY);
-                break;
-        }
     }
 
     private void RestoreStartupPosition()

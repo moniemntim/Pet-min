@@ -8,7 +8,6 @@ public static class AnimationVisualScale
     {
         return row switch
         {
-            2 => new AnimationFrameScale(1.0, 1.15),
             6 => new AnimationFrameScale(0.69, 0.69),
             7 => new AnimationFrameScale(0.60, 0.60),
             10 => new AnimationFrameScale(1.17, 1.17),

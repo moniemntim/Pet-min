@@ -33,9 +33,9 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 
 ## 餵食功能
 
-`FeedingController` 管理 `PetFoodType`（Apple、Carrot、Pellet）的啟動、完成、冷卻與完成訊息；`MainWindow` 只在 Feed one-shot 完成時增加一次統計並保存。右鍵桌寵與系統匣共用「餵食薯餅」子選單。餵食序列使用 row7（與 Groom 共用），拿食物到嘴邊後完成，顯示「吃飽了！」並播放 `HappyJump`，完成後 3 秒內拒絕新餵食。
+`FeedingController` 管理 `PetFoodType`（Apple、Carrot、Pellet）的啟動、完成、冷卻與完成訊息；`MainWindow` 只在 Feed one-shot 完成時增加一次統計並保存。右鍵桌寵與系統匣共用「餵食薯餅」子選單。餵食序列沿用 row7 的六格時序，但畫面由 `FeedingFrameCache` 讀取 `Assets/Feeding/<Food>/00.png..05.png` 的專用寫實影格；完成後顯示「吃飽了！」、播放 `HappyJump`，並在 3 秒內拒絕新餵食。資產缺少或損壞時安全退回原 row7。
 
-餵食序列是最高優先狀態：暫停漫遊、拖曳、點擊、摸頭與其他左鍵互動；完成後才恢復原本狀態。overlay 的 apple/carrot/pellet shape 在 XAML 固定建立一次，每 tick 只更新可見性、位置與文字，不得在 render loop 建立新 shape。餵食仍可由 tray 觸發，即使 click-through 開啟。
+餵食序列是最高優先狀態：暫停漫遊、拖曳、點擊、摸頭與其他左鍵互動；完成後才恢復原本狀態。18 張進食影格在啟動時以 `BitmapCacheOption.OnLoad` 載入並 `Freeze()`，render loop 只重用快取物件；overlay 僅保留狀態文字。餵食仍可由 tray 觸發，即使 click-through 開啟。替換進食資產時必須維持 192×208 RGBA、六格、同一腳底基準，並檢查雙爪—食物—嘴部接觸。
 
 ## 設定格式
 

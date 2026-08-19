@@ -9,16 +9,6 @@ namespace ShuBingDesktopPet.Tests;
 public class FeedingControllerTests
 {
     [Theory]
-    [InlineData(-1, 112.0)]
-    [InlineData(0, 112.0)]
-    [InlineData(5, 70.0)]
-    [InlineData(99, 70.0)]
-    public void FeedingOverlayMotion_ClampsAndReachesTheMouth(int column, double expectedY)
-    {
-        FeedingOverlayMotion.CalculateFoodTop(column, frameCount: 6).Should().Be(expectedY);
-    }
-
-    [Theory]
     [InlineData(PetFoodType.Apple)]
     [InlineData(PetFoodType.Carrot)]
     [InlineData(PetFoodType.Pellet)]

@@ -1,0 +1,7 @@
+Create one horizontal eight-frame photorealistic natural walking-cycle strip of the exact same real Syrian hamster, facing and travelling toward screen-right.
+
+Exactly eight separated complete full-body poses, left to right, on flat pure green #00FF00. Use the attached 8-slot layout guide only for spacing. Show a low, compact hamster walk rather than a gallop: front and hind paws alternate through contact, lift, short forward swing and landing. The visible near-side forepaw and hind paw must not move forward together; the far-side pair follows in the opposite phase. Natural body occlusion may hide part of a far-side paw. Keep the torso nearly level with only a tiny shoulder/rump bob, and return smoothly from frame 7 to frame 0.
+
+Lock camera distance, head size, back height, body length, rump volume and ground baseline. Every planted paw touches the same baseline. Legs remain short beneath the fur and never stretch. Preserve the exact warm taupe-brown head and rump, broad white middle band, small dorsal brown island, glossy black eye, pink nose and paws, translucent ear and realistic fine fur.
+
+No sliding paws, hovering, foot teleporting, repeated static stride, extra or missing limbs, elongated legs, crossed anatomy, running leap, speed lines, dust, floor, shadow, scenery, labels, borders, guide marks, motion blur, clothes, accessories, cartoon eyes or invented markings. Nothing touches another pose or the outer canvas.

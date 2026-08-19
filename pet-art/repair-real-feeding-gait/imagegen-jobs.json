@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "run_dir": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait",
+  "primary_generation_skill": "$imagegen",
+  "jobs": [
+    {
+      "id": "feeding-apple",
+      "kind": "row-strip",
+      "status": "generated",
+      "prompt_file": "prompts/feeding-apple.md",
+      "input_images": [
+        { "path": "..\\run\\references\\canonical-base.png", "role": "canonical identity reference" },
+        { "path": "..\\references\\reference_board_01.jpg", "role": "real hamster eating posture and paw-mouth contact" },
+        { "path": "..\\references\\reference_board_06.jpg", "role": "real head-down feeding and body footprint" },
+        { "path": "..\\run\\references\\layout-guides\\running.png", "role": "six-slot layout guide only" },
+        { "path": "..\\run\\qa\\final-contact-sheet-live-v5.png", "role": "approved identity scale and baseline" }
+      ],
+      "output_path": "decoded/feeding-apple.png",
+      "selected_source": "C:\\Users\\787\\.codex\\generated_images\\01a01a48-ce92-7232-b357-e061c77b3ff9\\exec-15a525e7-359b-4422-8c37-24f19686f8b3.png",
+      "generation_qa": "Exactly six separated full-body hamster poses; stable size and baseline with apple wedge held between paws at the mouth.",
+      "depends_on": []
+    },
+    {
+      "id": "feeding-carrot",
+      "kind": "row-strip",
+      "status": "generated",
+      "prompt_file": "prompts/feeding-carrot.md",
+      "input_images": [
+        { "path": "..\\run\\references\\canonical-base.png", "role": "canonical identity reference" },
+        { "path": "..\\references\\reference_board_01.jpg", "role": "real hamster eating posture and paw-mouth contact" },
+        { "path": "..\\references\\reference_board_06.jpg", "role": "real head-down feeding and body footprint" },
+        { "path": "..\\run\\references\\layout-guides\\running.png", "role": "six-slot layout guide only" },
+        { "path": "..\\run\\qa\\final-contact-sheet-live-v5.png", "role": "approved identity scale and baseline" }
+      ],
+      "output_path": "decoded/feeding-carrot.png",
+      "selected_source": "C:\\Users\\787\\.codex\\generated_images\\01a01a49-02d1-7ab2-9a56-29361596dfed\\exec-ccdf0766-f3c8-41f6-b614-b4bc6f0c5b53.png",
+      "generation_qa": "Exactly six separated full-body hamster poses; stable size and baseline with carrot held between paws at the mouth.",
+      "depends_on": []
+    },
+    {
+      "id": "feeding-pellet",
+      "kind": "row-strip",
+      "status": "generated",
+      "prompt_file": "prompts/feeding-pellet.md",
+      "input_images": [
+        { "path": "..\\run\\references\\canonical-base.png", "role": "canonical identity reference" },
+        { "path": "..\\references\\reference_board_01.jpg", "role": "real hamster eating posture and paw-mouth contact" },
+        { "path": "..\\references\\reference_board_06.jpg", "role": "real head-down feeding and body footprint" },
+        { "path": "..\\run\\references\\layout-guides\\running.png", "role": "six-slot layout guide only" },
+        { "path": "..\\run\\qa\\final-contact-sheet-live-v5.png", "role": "approved identity scale and baseline" }
+      ],
+      "output_path": "decoded/feeding-pellet.png",
+      "selected_source": "C:\\Users\\787\\.codex\\generated_images\\01a01a4b-eb77-79e1-b6e4-5325c48b26d5\\exec-5371a155-3602-4067-af79-1eacecabe303.png",
+      "generation_qa": "Exactly six separated full-body hamster poses; stable size and baseline with pellet held between paws at the mouth.",
+      "depends_on": []
+    },
+    {
+      "id": "walking-right",
+      "kind": "row-strip",
+      "status": "generated",
+      "prompt_file": "prompts/walking-right.md",
+      "input_images": [
+        { "path": "..\\run\\references\\canonical-base.png", "role": "canonical identity reference" },
+        { "path": "..\\references\\reference_board_08.jpg", "role": "real walking posture and paw placement" },
+        { "path": "..\\references\\reference_board_06.jpg", "role": "right-side anatomy and short paws under body" },
+        { "path": "..\\run\\references\\layout-guides\\running-right.png", "role": "eight-slot layout guide only" },
+        { "path": "..\\run\\qa\\final-contact-sheet-live-v5.png", "role": "approved identity scale and baseline" }
+      ],
+      "output_path": "decoded/walking-right.png",
+      "selected_source": "C:\\Users\\787\\.codex\\generated_images\\01a01a48-96a5-7961-9ec2-c36d7412dd3c\\exec-d5da5826-0187-4a82-9908-9c32e469bb0b.png",
+      "generation_qa": "Exactly eight separated full-body right-facing hamster poses; stable size and baseline with alternating paw contacts.",
+      "depends_on": []
+    },
+    {
+      "id": "walking-left",
+      "kind": "row-strip",
+      "status": "generated",
+      "prompt_file": "prompts/walking-left.md",
+      "input_images": [
+        { "path": "..\\run\\references\\canonical-base.png", "role": "canonical identity reference" },
+        { "path": "..\\references\\reference_board_08.jpg", "role": "real left-side walking sequence and paw placement" },
+        { "path": "..\\references\\reference_board_02.jpg", "role": "left-side identity and body proportions" },
+        { "path": "..\\run\\references\\layout-guides\\running-left.png", "role": "eight-slot layout guide only" },
+        { "path": "decoded\\walking-right.png", "role": "approved right-walking scale baseline and cadence" }
+      ],
+      "output_path": "decoded/walking-left.png",
+      "selected_source": "C:\\Users\\787\\.codex\\generated_images\\01a01a4c-0d1f-7b32-969c-84df79cc2504\\exec-0b70e653-e806-4b8d-9b2d-07bb00007472.png",
+      "generation_qa": "Exactly eight separated full-body left-facing hamster poses; stable size and baseline with natural alternating paw contacts.",
+      "depends_on": ["walking-right"]
+    }
+  ]
+}

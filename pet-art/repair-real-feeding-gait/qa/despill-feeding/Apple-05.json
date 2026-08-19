@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "input": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-apple\\05.png",
+  "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\final\\feeding\\Apple\\05.png",
+  "chroma_key": "#00FF00",
+  "algorithm": "edge-local-chroma-spill-suppression",
+  "strength": 1,
+  "edge_radius": 5,
+  "spill_tolerance": 0.15,
+  "minimum_saturation": 0.1,
+  "changed_pixels": 1772,
+  "decontaminated_pixels": 1592,
+  "spill_suppressed_pixels": 1772,
+  "rejected_pixels": 0,
+  "changed_by_cell": {
+    "r0c0": 1772
+  },
+  "alpha_preserved": true
+}

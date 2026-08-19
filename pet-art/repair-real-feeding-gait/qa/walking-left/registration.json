@@ -1,0 +1,157 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 170,
+  "max_sprite": [
+    192,
+    208
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\00.png",
+      "source_bbox": [
+        5,
+        41,
+        187,
+        166
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        46,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\01.png",
+      "source_bbox": [
+        5,
+        44,
+        187,
+        164
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        51,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\02.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\02.png",
+      "source_bbox": [
+        5,
+        46,
+        187,
+        162
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        55,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\03.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\03.png",
+      "source_bbox": [
+        5,
+        49,
+        187,
+        158
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        62,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\04.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\04.png",
+      "source_bbox": [
+        5,
+        54,
+        187,
+        153
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        72,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\05.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\05.png",
+      "source_bbox": [
+        5,
+        52,
+        187,
+        156
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        67,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\06.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\06.png",
+      "source_bbox": [
+        5,
+        52,
+        187,
+        155
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        68,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-left\\frames\\running-left\\07.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left\\07.png",
+      "source_bbox": [
+        5,
+        51,
+        187,
+        156
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        66,
+        187,
+        171
+      ],
+      "baseline": 170
+    }
+  ]
+}

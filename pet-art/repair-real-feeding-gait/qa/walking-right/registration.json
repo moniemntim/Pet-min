@@ -1,0 +1,157 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 170,
+  "max_sprite": [
+    192,
+    208
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\00.png",
+      "source_bbox": [
+        5,
+        53,
+        187,
+        154
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        70,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\01.png",
+      "source_bbox": [
+        5,
+        53,
+        187,
+        155
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        69,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\02.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\02.png",
+      "source_bbox": [
+        5,
+        49,
+        187,
+        158
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        62,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\03.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\03.png",
+      "source_bbox": [
+        5,
+        53,
+        187,
+        155
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        69,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\04.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\04.png",
+      "source_bbox": [
+        5,
+        52,
+        187,
+        155
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        68,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\05.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\05.png",
+      "source_bbox": [
+        5,
+        49,
+        187,
+        159
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        61,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\06.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\06.png",
+      "source_bbox": [
+        5,
+        50,
+        187,
+        158
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        63,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\walking-right\\frames\\running-right\\07.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right\\07.png",
+      "source_bbox": [
+        5,
+        53,
+        187,
+        154
+      ],
+      "scale": 1.0,
+      "registered_bbox": [
+        5,
+        70,
+        187,
+        171
+      ],
+      "baseline": 170
+    }
+  ]
+}

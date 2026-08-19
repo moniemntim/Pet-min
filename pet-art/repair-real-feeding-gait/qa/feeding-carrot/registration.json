@@ -1,0 +1,121 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 188,
+  "max_sprite": [
+    164,
+    166
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\feeding-carrot\\frames\\running\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-carrot\\00.png",
+      "source_bbox": [
+        5,
+        20,
+        187,
+        188
+      ],
+      "scale": 0.9010989010989011,
+      "registered_bbox": [
+        14,
+        38,
+        178,
+        189
+      ],
+      "baseline": 188
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\feeding-carrot\\frames\\running\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-carrot\\01.png",
+      "source_bbox": [
+        5,
+        19,
+        187,
+        189
+      ],
+      "scale": 0.9010989010989011,
+      "registered_bbox": [
+        14,
+        36,
+        178,
+        189
+      ],
+      "baseline": 188
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\feeding-carrot\\frames\\running\\02.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-carrot\\02.png",
+      "source_bbox": [
+        5,
+        19,
+        187,
+        188
+      ],
+      "scale": 0.9010989010989011,
+      "registered_bbox": [
+        14,
+        37,
+        178,
+        189
+      ],
+      "baseline": 188
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\feeding-carrot\\frames\\running\\03.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-carrot\\03.png",
+      "source_bbox": [
+        5,
+        19,
+        187,
+        188
+      ],
+      "scale": 0.9010989010989011,
+      "registered_bbox": [
+        14,
+        37,
+        178,
+        189
+      ],
+      "baseline": 188
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\feeding-carrot\\frames\\running\\04.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-carrot\\04.png",
+      "source_bbox": [
+        5,
+        20,
+        187,
+        187
+      ],
+      "scale": 0.9010989010989011,
+      "registered_bbox": [
+        14,
+        39,
+        178,
+        189
+      ],
+      "baseline": 188
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\qa\\feeding-carrot\\frames\\running\\05.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\feeding-carrot\\05.png",
+      "source_bbox": [
+        5,
+        21,
+        187,
+        187
+      ],
+      "scale": 0.9010989010989011,
+      "registered_bbox": [
+        14,
+        39,
+        178,
+        189
+      ],
+      "baseline": 188
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# Temporary extraction roots and duplicate preview inputs.
+qa/*-preview-frames/
+qa/final-feeding-*-frames/
+qa/final-atlas-decoded/
+qa/feeding-*/decoded/
+qa/feeding-*/frames/
+qa/walking-*/decoded/
+qa/walking-*/frames/
+
+# Superseded intermediate sheets/atlas.
+qa/atlas-preview-manifest.json
+qa/spritesheet-walk-preview.png
+qa/walk-contact-sheet.png
+final/spritesheet-raw.png
+
+# Keep only the focused motion previews used for final review.
+qa/walk-previews/*.gif
+!qa/walk-previews/running-right.gif
+!qa/walk-previews/running-left.gif
+qa/feeding-*-previews/*.gif
+!qa/feeding-*-previews/running.gif

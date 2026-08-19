@@ -372,11 +372,11 @@ public class PetLogicTests
     }
 
     [Fact]
-    public void AnimationVisualScale_RowTwoUsesStretchY()
+    public void AnimationVisualScale_RowTwoKeepsScaleAtOne()
     {
         var scale = AnimationVisualScale.GetFrameScale(2);
         scale.ScaleX.Should().Be(1.0);
-        scale.ScaleY.Should().Be(1.15);
+        scale.ScaleY.Should().Be(1.0);
     }
 
     [Fact]

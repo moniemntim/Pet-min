@@ -1,0 +1,22 @@
+{
+  "source_atlas": "C:\\Users\\787\\Documents\\gogo\\src\\ShuBingDesktopPet\\Assets\\spritesheet.png",
+  "output_atlas": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\final\\spritesheet-raw.png",
+  "frame_size": [
+    192,
+    208
+  ],
+  "columns": 8,
+  "rows": 11,
+  "replacements": [
+    {
+      "row": 1,
+      "frames_dir": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-right",
+      "frame_count": 8
+    },
+    {
+      "row": 2,
+      "frames_dir": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-real-feeding-gait\\registered\\walking-left",
+      "frame_count": 8
+    }
+  ]
+}

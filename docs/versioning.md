@@ -16,7 +16,7 @@
 ## 發佈流程
 
 1. 更新版本號、`CHANGELOG.md`、README 與必要文件。
-2. 執行 Release build、93 個自動測試及 win-x64 自包含單檔 publish。
+2. 執行 Release build、完整自動測試（目前 110 個）及 win-x64 自包含單檔 publish。
 3. 依 `docs/manual-qa.md` 驗收透明、拖曳、跨螢幕、DPI、設定、圖示與關閉清理。
 4. 記錄 EXE SHA-256、測試數量與已知限制。
 5. 建立對應 tag（例如 `v1.1.0`），再建立 GitHub Release，附上 EXE 與變更摘要。
