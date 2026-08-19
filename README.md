@@ -1,2 +1,44 @@
-# Pet-min
-薯餅模擬器
+# 薯餅桌寵
+
+目前穩定基準版本：`v1.0.0`（餵食功能加入前）
+
+以專案內 81 張薯餅實物照片共同還原的 Windows 10/11 寫實桌面寵物。
+
+## 功能
+
+- 透明、無邊框、永遠置頂，不顯示在工作列。
+- 按住寵物移動超過 6 DIP 後拖曳；點擊抬爪、雙擊跳躍、摸頭與游標追視。
+- 可開關自主漫遊，支援目前螢幕／所有螢幕、三段速度與 75%–150% 大小。
+- 自動避開工作列並保持完整可見；支援負座標、多螢幕與 per-monitor DPI。
+- 系統匣可顯示／隱藏、切換漫遊與滑鼠穿透、開啟設定、回主螢幕及退出；在寵物本體按右鍵會顯示同一份選單。
+- EXE、設定視窗與系統匣使用薯餅正面照片圖示，內含 16–256 px 多尺寸 Windows 圖示。
+- 「所有螢幕」漫遊會先走到目前螢幕邊界，再從目的螢幕對應入口繼續行走，支援螢幕間隙與負座標排列。
+- 設定與最後位置保存於 `%LOCALAPPDATA%\ShuBingDesktopPet\settings.json`。
+
+## 使用可攜版
+
+開啟 `dist/ShuBingDesktopPet-win-x64`，直接執行 `ShuBingDesktopPet.exe`。這是內含 .NET 8 執行環境與角色資產的單檔可攜版，不必另外安裝 .NET。滑鼠穿透開啟時，仍可由系統匣選單關閉穿透或退出程式。
+
+## 開發與驗證
+
+需求：.NET 8 SDK（Windows）。
+
+```powershell
+dotnet build .\ShuBingDesktopPet.sln -c Release
+dotnet test .\ShuBingDesktopPet.sln -c Release
+dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
+
+角色圖集為 v2 規格：8×11、單格 192×208、總尺寸 1536×2288。原照逐張分析在
+`pet-art/references/reference_catalog.csv`，完整參考圖板、contact sheet、動畫預覽與方向 QA
+留存在 `pet-art`。手動驗收項目見 `docs/manual-qa.md`。
+
+## 文件索引
+
+- [使用說明](docs/user-guide.md)：安裝、操作、設定、系統匣、資料位置與疑難排解。
+- [維護手冊](docs/maintenance-guide.md)：架構、建置、測試、發佈、動畫資源與生命週期。
+- [交接手冊](docs/handover-guide.md)：接手清單、驗收重點、已知限制與發版流程。
+- [版本控制規範](docs/versioning.md)：SemVer、分支、提交與標籤規則。
+- [手動驗收](docs/manual-qa.md) 與 [驗證報告](docs/verification-report.md)：目前的測試與人工檢查紀錄。
+
+餵食功能預計以 `v1.1.0` 作為向後相容的新功能版本；`v1.0.0` 保留為加入餵食前可回復的穩定基準。

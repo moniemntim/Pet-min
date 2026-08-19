@@ -1,0 +1,7 @@
+Create one clean full-body reference sprite for Codex pet 薯餅.
+
+Pet identity: Use every supplied reference board collectively. Clear side/front/top/rear photos define identity; blurry, held, underside and partial photos only supplement exact coat boundaries, ears, paws, belly, proportions and pose mechanics..
+Style: Pet-safe sprite: compact full-body mascot, readable in a 192x208 cell, clear silhouette, simple face, stable palette/materials, and crisp edges for chroma-key extraction. Style `auto`: Infer the most appropriate pet-safe style from the user request and reference images, then keep that exact style consistent across every row. User style notes: Photorealistic real Syrian hamster, natural anatomy and realistic fine fur; absolutely no cartoon eyes, no anthropomorphic proportions, no clothes, no accessories, no invented markings. Preserve the exact warm taupe-brown head and rump, broad clean white shoulder-and-midbody band, small brown dorsal island, glossy black eyes, soft pink nose and paws, translucent pink inner ears, round compact adult body. Full body, clean silhouette, consistent identity in every frame..
+
+
+Place a single centered pose on a perfectly flat pure green #00FF00 chroma-key background. Keep the full pet visible, compact, readable at 192x208, and easy to animate. Preserve approved reference identity cues. No scenery, text, borders, checkerboard transparency, shadows, glows, detached effects, or extra props. Keep #00FF00 and close colors out of the pet, props, highlights, and effects.

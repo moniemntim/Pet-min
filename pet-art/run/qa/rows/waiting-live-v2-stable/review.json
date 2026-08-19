@@ -1,0 +1,116 @@
+{
+  "ok": true,
+  "frames_root": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames",
+  "states": [
+    "waiting"
+  ],
+  "errors": [],
+  "warnings": [
+    "waiting used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+  ],
+  "rows": [
+    {
+      "state": "waiting",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "waiting used extraction method stable-slots; confirm motion playback remains stable and unclipped"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames\\waiting\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20972,
+          "bbox": [
+            14,
+            20,
+            178,
+            185
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 295
+        },
+        {
+          "index": 1,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames\\waiting\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20524,
+          "bbox": [
+            14,
+            25,
+            178,
+            185
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 275
+        },
+        {
+          "index": 2,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames\\waiting\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20533,
+          "bbox": [
+            12,
+            28,
+            179,
+            185
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 293
+        },
+        {
+          "index": 3,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames\\waiting\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20157,
+          "bbox": [
+            13,
+            28,
+            179,
+            188
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 294
+        },
+        {
+          "index": 4,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames\\waiting\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 21298,
+          "bbox": [
+            5,
+            24,
+            187,
+            185
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 331
+        },
+        {
+          "index": 5,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\waiting-live-v2-stable\\frames\\waiting\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 20276,
+          "bbox": [
+            16,
+            20,
+            176,
+            184
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 287
+        }
+      ]
+    }
+  ]
+}

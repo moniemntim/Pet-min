@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "strip": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-look-scale\\decoded\\look-cardinals.png",
+  "directions": [
+    "000",
+    "090",
+    "180",
+    "270"
+  ],
+  "errors": [],
+  "anchors": [
+    {
+      "direction": "000",
+      "source_box": [
+        0,
+        0,
+        478,
+        823
+      ],
+      "used_pixels": 73245,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-look-scale\\decoded\\look-anchors\\000.png"
+    },
+    {
+      "direction": "090",
+      "source_box": [
+        478,
+        0,
+        955,
+        823
+      ],
+      "used_pixels": 72560,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-look-scale\\decoded\\look-anchors\\090.png"
+    },
+    {
+      "direction": "180",
+      "source_box": [
+        955,
+        0,
+        1432,
+        823
+      ],
+      "used_pixels": 77548,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-look-scale\\decoded\\look-anchors\\180.png"
+    },
+    {
+      "direction": "270",
+      "source_box": [
+        1432,
+        0,
+        1910,
+        823
+      ],
+      "used_pixels": 69333,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-look-scale\\decoded\\look-anchors\\270.png"
+    }
+  ]
+}

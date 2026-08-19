@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "chroma_key": {
+    "hex": "#00FF00",
+    "rgb": [
+      0,
+      255,
+      0
+    ],
+    "threshold": 96.0
+  },
+  "rows": [
+    {
+      "state": "waiting",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\waiting\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\waiting\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\waiting\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\waiting\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\waiting\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\waiting\\05.png"
+      ],
+      "method": "components"
+    }
+  ]
+}

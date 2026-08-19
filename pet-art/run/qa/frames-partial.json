@@ -1,0 +1,386 @@
+{
+  "ok": true,
+  "frames_root": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames",
+  "states": [
+    "idle",
+    "running-right",
+    "running-left"
+  ],
+  "errors": [],
+  "warnings": [
+    "idle used extraction method stable-slots; component extraction is preferred",
+    "running-right used extraction method stable-slots; component extraction is preferred",
+    "running-left used extraction method stable-slots; component extraction is preferred"
+  ],
+  "rows": [
+    {
+      "state": "idle",
+      "expected_frames": 6,
+      "actual_frames": 6,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "idle used extraction method stable-slots; component extraction is preferred"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\idle\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17292,
+          "bbox": [
+            5,
+            39,
+            187,
+            170
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 5
+        },
+        {
+          "index": 1,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\idle\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16949,
+          "bbox": [
+            6,
+            39,
+            185,
+            170
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 5
+        },
+        {
+          "index": 2,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\idle\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16808,
+          "bbox": [
+            7,
+            38,
+            185,
+            170
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 2
+        },
+        {
+          "index": 3,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\idle\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17226,
+          "bbox": [
+            5,
+            38,
+            187,
+            170
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 4
+        },
+        {
+          "index": 4,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\idle\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17203,
+          "bbox": [
+            6,
+            39,
+            186,
+            170
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 3
+        },
+        {
+          "index": 5,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\idle\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 17036,
+          "bbox": [
+            6,
+            38,
+            186,
+            170
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 2
+        }
+      ]
+    },
+    {
+      "state": "running-right",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "running-right used extraction method stable-slots; component extraction is preferred"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 12167,
+          "bbox": [
+            6,
+            46,
+            186,
+            156
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 8
+        },
+        {
+          "index": 1,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 11587,
+          "bbox": [
+            12,
+            52,
+            180,
+            161
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 7
+        },
+        {
+          "index": 2,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 11153,
+          "bbox": [
+            17,
+            52,
+            174,
+            161
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 9
+        },
+        {
+          "index": 3,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 11020,
+          "bbox": [
+            13,
+            52,
+            178,
+            159
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 6
+        },
+        {
+          "index": 4,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 10140,
+          "bbox": [
+            22,
+            57,
+            170,
+            159
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 3
+        },
+        {
+          "index": 5,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 11049,
+          "bbox": [
+            17,
+            53,
+            174,
+            160
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 5
+        },
+        {
+          "index": 6,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 10767,
+          "bbox": [
+            18,
+            59,
+            173,
+            158
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 8
+        },
+        {
+          "index": 7,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-right\\07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 11626,
+          "bbox": [
+            8,
+            62,
+            184,
+            162
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 3
+        }
+      ]
+    },
+    {
+      "state": "running-left",
+      "expected_frames": 8,
+      "actual_frames": 8,
+      "extraction_method": "stable-slots",
+      "ok": true,
+      "errors": [],
+      "warnings": [
+        "running-left used extraction method stable-slots; component extraction is preferred"
+      ],
+      "frames": [
+        {
+          "index": 0,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\00.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16492,
+          "bbox": [
+            10,
+            27,
+            181,
+            177
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 5
+        },
+        {
+          "index": 1,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15926,
+          "bbox": [
+            14,
+            32,
+            176,
+            177
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 1
+        },
+        {
+          "index": 2,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16624,
+          "bbox": [
+            13,
+            30,
+            177,
+            175
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 1
+        },
+        {
+          "index": 3,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16054,
+          "bbox": [
+            13,
+            32,
+            178,
+            179
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 3
+        },
+        {
+          "index": 4,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\04.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15749,
+          "bbox": [
+            11,
+            33,
+            179,
+            178
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 3
+        },
+        {
+          "index": 5,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 16043,
+          "bbox": [
+            15,
+            32,
+            175,
+            180
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 6
+        },
+        {
+          "index": 6,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\06.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15806,
+          "bbox": [
+            13,
+            36,
+            177,
+            179
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 5
+        },
+        {
+          "index": 7,
+          "file": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames\\running-left\\07.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 15024,
+          "bbox": [
+            13,
+            39,
+            177,
+            181
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 4
+        }
+      ]
+    }
+  ]
+}

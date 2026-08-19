@@ -1,0 +1,125 @@
+{
+  "ok": true,
+  "chroma_key": {
+    "hex": "#00FF00",
+    "rgb": [
+      0,
+      255,
+      0
+    ],
+    "threshold": 96.0
+  },
+  "rows": [
+    {
+      "state": "idle",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\idle\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\idle\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\idle\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\idle\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\idle\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\idle\\05.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "running-right",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\05.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\06.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-right\\07.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "running-left",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\05.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\06.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running-left\\07.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "waving",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waving\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waving\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waving\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waving\\03.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "jumping",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\jumping\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\jumping\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\jumping\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\jumping\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\jumping\\04.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "failed",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\05.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\06.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\failed\\07.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "waiting",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waiting\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waiting\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waiting\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waiting\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waiting\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\waiting\\05.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "running",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\running\\05.png"
+      ],
+      "method": "components"
+    },
+    {
+      "state": "review",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\review\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\review\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\review\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\review\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\review\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\frames-live-v2\\review\\05.png"
+      ],
+      "method": "components"
+    }
+  ]
+}

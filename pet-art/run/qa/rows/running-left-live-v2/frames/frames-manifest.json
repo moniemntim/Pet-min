@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "chroma_key": {
+    "hex": "#00FF00",
+    "rgb": [
+      0,
+      255,
+      0
+    ],
+    "threshold": 96.0
+  },
+  "rows": [
+    {
+      "state": "running-left",
+      "frames": [
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\00.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\01.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\02.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\03.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\04.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\05.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\06.png",
+        "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\qa\\rows\\running-left-live-v2\\frames\\running-left\\07.png"
+      ],
+      "method": "components"
+    }
+  ]
+}

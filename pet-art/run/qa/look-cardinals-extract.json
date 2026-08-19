@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "strip": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\decoded\\look-cardinals.png",
+  "directions": [
+    "000",
+    "090",
+    "180",
+    "270"
+  ],
+  "errors": [],
+  "anchors": [
+    {
+      "direction": "000",
+      "source_box": [
+        0,
+        0,
+        513,
+        767
+      ],
+      "used_pixels": 81104,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\decoded\\look-anchors\\000.png"
+    },
+    {
+      "direction": "090",
+      "source_box": [
+        513,
+        0,
+        1026,
+        767
+      ],
+      "used_pixels": 84846,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\decoded\\look-anchors\\090.png"
+    },
+    {
+      "direction": "180",
+      "source_box": [
+        1026,
+        0,
+        1538,
+        767
+      ],
+      "used_pixels": 77749,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\decoded\\look-anchors\\180.png"
+    },
+    {
+      "direction": "270",
+      "source_box": [
+        1538,
+        0,
+        2051,
+        767
+      ],
+      "used_pixels": 80395,
+      "edge_pixels": 0,
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\run\\decoded\\look-anchors\\270.png"
+    }
+  ]
+}

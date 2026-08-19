@@ -1,0 +1,17 @@
+{
+  "decision": "accept",
+  "severity": "minor",
+  "reviewed_by": "primary-agent",
+  "hard_gates": {
+    "horizontal_090_270": "pass",
+    "vertical_000_180": "pass"
+  },
+  "blind_validation": "blind-live-v5/validation.json",
+  "warnings": [
+    "匿名小尺寸圖中，多數斜向姿勢的次要垂直分量被標成 ambiguous。",
+    "所有七組水平比較均正確，因此沒有左右象限反轉。",
+    "正上／正下與正左／正右兩個硬性門檻均由三位審查者通過。"
+  ],
+  "resolution": "已用帶標籤的 direction-qa-live-v5.png 逐格核對 16 個角度；202.5、225、247.5 明確維持畫面左側，292.5、315、337.5 明確維持左上側。斜方向的次要上下分量在匿名縮圖中較弱，屬可讀性警示，不是錯誤象限。",
+  "runtime_scale_review": "row10 使用整列共同 1.17 倍、底部置中縮放；只修正前後兩列的共同角色尺寸，不改各方向的相對幾何或方向語意。"
+}

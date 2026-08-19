@@ -1,0 +1,16 @@
+# GitHub diff 不應嘗試解析二進位媒體
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.gif binary
+*.webp binary
+
+# 文字檔統一以 LF 儲存
+*.md text eol=lf
+*.json text eol=lf
+*.cs text eol=lf
+*.xaml text eol=lf
+*.csproj text eol=lf
+*.sln text eol=crlf
+*.ps1 text eol=crlf

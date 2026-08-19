@@ -1,0 +1,32 @@
+# .NET / IDE 建置輸出
+**/bin/
+**/obj/
+.vs/
+dist/
+
+# 測試與覆蓋率輸出
+TestResults/
+**/TestResults/
+*.trx
+coverage/
+*.coverage
+
+# 使用者資料（不可提交）
+settings.json
+**/ShuBingDesktopPet/settings.json
+
+# 原始照片工作暫存與歷史資料
+圖/testdisk-7.3-WIP/
+圖/History*
+
+# 本機工具／系統檔
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+Thumbs.db
+Desktop.ini
+
+# Python 暫存
+__pycache__/
+*.py[cod]

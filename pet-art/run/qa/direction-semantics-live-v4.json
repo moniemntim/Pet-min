@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "reviewed_by": [
+    "independent-row9-visual-qa",
+    "independent-row10-visual-qa"
+  ],
+  "directions": [
+    {"degrees": "000", "expected": "up", "observed": "up", "verdict": "pass", "reason": "鼻尖抬向畫面上方，可見下巴與胸口。"},
+    {"degrees": "022.5", "expected": "up-right", "observed": "up-right", "verdict": "pass", "reason": "抬頭並帶有向畫面右側的鼻尖與臉部轉向。"},
+    {"degrees": "045", "expected": "up-right", "observed": "up-right", "verdict": "pass", "reason": "右上方向清楚，頭部轉角較前格自然增加。"},
+    {"degrees": "067.5", "expected": "up-right", "observed": "up-right", "verdict": "pass", "reason": "接近正右但仍保留抬頭分量。"},
+    {"degrees": "090", "expected": "right", "observed": "right", "verdict": "pass", "reason": "鼻尖與臉部輪廓明確朝畫面右側。"},
+    {"degrees": "112.5", "expected": "down-right", "observed": "down-right", "verdict": "pass", "reason": "鼻尖維持畫面右側並開始低頭。"},
+    {"degrees": "135", "expected": "down-right", "observed": "down-right", "verdict": "pass", "reason": "右側面與低頭分量同時清楚。"},
+    {"degrees": "157.5", "expected": "down-right", "observed": "down-right", "verdict": "pass", "reason": "接近正下但仍保留可辨識的畫面右側分量。"},
+    {"degrees": "180", "expected": "down", "observed": "down", "verdict": "pass", "reason": "正面低頭看向前腳。"},
+    {"degrees": "202.5", "expected": "down-left", "observed": "down-left", "verdict": "pass", "reason": "低頭並輕微轉向畫面左側。"},
+    {"degrees": "225", "expected": "down-left", "observed": "down-left", "verdict": "pass", "reason": "下左方向比前格更側向且連續。"},
+    {"degrees": "247.5", "expected": "down-left", "observed": "down-left", "verdict": "pass", "reason": "接近正左並保留低頭分量。"},
+    {"degrees": "270", "expected": "left", "observed": "left", "verdict": "pass", "reason": "鼻尖與臉部輪廓明確朝畫面左側。"},
+    {"degrees": "292.5", "expected": "up-left", "observed": "up-left", "verdict": "pass", "reason": "左側面開始抬頭，方向連續。"},
+    {"degrees": "315", "expected": "up-left", "observed": "up-left", "verdict": "pass", "reason": "畫面左上方向清楚，較窄輪廓屬轉回正面的透視。"},
+    {"degrees": "337.5", "expected": "up-left", "observed": "up-left", "verdict": "pass", "reason": "接近正上且仍保留畫面左側分量，順接 000。"}
+  ]
+}
