@@ -1,0 +1,67 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 184,
+  "max_sprite": [
+    150,
+    170
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-oriented-sequence-input-v4\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-oriented-sequence-registered-v4\\00.png",
+      "source_bbox": [
+        0,
+        0,
+        2404,
+        3786
+      ],
+      "scale": 0.04490227152667723,
+      "registered_bbox": [
+        42,
+        15,
+        150,
+        185
+      ],
+      "baseline": 184
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-oriented-sequence-input-v4\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-oriented-sequence-registered-v4\\01.png",
+      "source_bbox": [
+        0,
+        0,
+        2307,
+        3710
+      ],
+      "scale": 0.04582210242587601,
+      "registered_bbox": [
+        43,
+        15,
+        149,
+        185
+      ],
+      "baseline": 184
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-oriented-sequence-input-v4\\02.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-oriented-sequence-registered-v4\\02.png",
+      "source_bbox": [
+        0,
+        0,
+        1935,
+        3154
+      ],
+      "scale": 0.053899809765377296,
+      "registered_bbox": [
+        44,
+        15,
+        148,
+        185
+      ],
+      "baseline": 184
+    }
+  ]
+}

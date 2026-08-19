@@ -180,7 +180,7 @@ public partial class MainWindow : Window
         });
 
         var settingsItem = new ToolStripMenuItem("設定", null, (_, _) => _settingsWindow.ShowFrom(_settings));
-        var feedPellet = new ToolStripMenuItem("小餅乾（實拍）", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
+        var feedPellet = new ToolStripMenuItem("種子棒（薯餅實拍）", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
         _menuFeed = new ToolStripMenuItem("餵食薯餅");
         _menuFeed.DropDownItems.Add(feedPellet);
         var moveHome = new ToolStripMenuItem("回到主螢幕", null, (_, _) => MoveToPrimaryMonitor());

@@ -1,0 +1,49 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 170,
+  "max_sprite": [
+    182,
+    128
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-endpoints-input-v2\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-endpoints-registered-v2\\00.png",
+      "source_bbox": [
+        2774,
+        938,
+        6668,
+        3816
+      ],
+      "scale": 0.04447533009034051,
+      "registered_bbox": [
+        9,
+        43,
+        182,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-endpoints-input-v2\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-endpoints-registered-v2\\01.png",
+      "source_bbox": [
+        2619,
+        1060,
+        6807,
+        4016
+      ],
+      "scale": 0.04330175913396482,
+      "registered_bbox": [
+        5,
+        43,
+        186,
+        171
+      ],
+      "baseline": 170
+    }
+  ]
+}
