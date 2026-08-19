@@ -1,0 +1,157 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 170,
+  "max_sprite": [
+    182,
+    150
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\00.png",
+      "source_bbox": [
+        2774,
+        938,
+        6668,
+        3816
+      ],
+      "scale": 0.04673857216230098,
+      "registered_bbox": [
+        5,
+        36,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\01.png",
+      "source_bbox": [
+        2619,
+        1060,
+        6807,
+        4016
+      ],
+      "scale": 0.04345749761222541,
+      "registered_bbox": [
+        5,
+        43,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\02.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\02.png",
+      "source_bbox": [
+        2774,
+        938,
+        6668,
+        3816
+      ],
+      "scale": 0.04673857216230098,
+      "registered_bbox": [
+        5,
+        36,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\03.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\03.png",
+      "source_bbox": [
+        2619,
+        1060,
+        6807,
+        4016
+      ],
+      "scale": 0.04345749761222541,
+      "registered_bbox": [
+        5,
+        43,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\04.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\04.png",
+      "source_bbox": [
+        2774,
+        938,
+        6668,
+        3816
+      ],
+      "scale": 0.04673857216230098,
+      "registered_bbox": [
+        5,
+        36,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\05.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\05.png",
+      "source_bbox": [
+        2619,
+        1060,
+        6807,
+        4016
+      ],
+      "scale": 0.04345749761222541,
+      "registered_bbox": [
+        5,
+        43,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\06.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\06.png",
+      "source_bbox": [
+        2774,
+        938,
+        6668,
+        3816
+      ],
+      "scale": 0.04673857216230098,
+      "registered_bbox": [
+        5,
+        36,
+        187,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-input\\07.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered\\07.png",
+      "source_bbox": [
+        2619,
+        1060,
+        6807,
+        4016
+      ],
+      "scale": 0.04345749761222541,
+      "registered_bbox": [
+        5,
+        43,
+        187,
+        171
+      ],
+      "baseline": 170
+    }
+  ]
+}

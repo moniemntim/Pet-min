@@ -196,6 +196,15 @@ public class PetLogicTests
     }
 
     [Fact]
+    public void AnimationPlanFactory_RowSevenHasNaturalOneShotDurationsForFeeding()
+    {
+        var row7 = AnimationPlanFactory.RowSpec(7);
+        row7.FrameCount.Should().Be(6);
+        row7.Durations.Should().BeEquivalentTo(new[] { 220, 180, 180, 180, 180, 320 });
+        row7.Loop.Should().BeFalse();
+    }
+
+    [Fact]
     public void AnimationPlanFactory_ReactionRows_GroomAndPettedAreSwapped()
     {
         AnimationPlanFactory.ReactionRow(PetAction.Groom).Should().Be(7);

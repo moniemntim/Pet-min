@@ -1,0 +1,121 @@
+{
+  "canvas": [
+    192,
+    208
+  ],
+  "baseline": 170,
+  "max_sprite": [
+    156,
+    136
+  ],
+  "frames": [
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-input\\00.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-registered-v2\\00.png",
+      "source_bbox": [
+        881,
+        440,
+        3023,
+        2292
+      ],
+      "scale": 0.07282913165266107,
+      "registered_bbox": [
+        18,
+        36,
+        174,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-input\\01.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-registered-v2\\01.png",
+      "source_bbox": [
+        881,
+        440,
+        3023,
+        2292
+      ],
+      "scale": 0.07282913165266107,
+      "registered_bbox": [
+        18,
+        36,
+        174,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-input\\02.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-registered-v2\\02.png",
+      "source_bbox": [
+        909,
+        199,
+        3096,
+        1988
+      ],
+      "scale": 0.07133058984910837,
+      "registered_bbox": [
+        18,
+        43,
+        174,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-input\\03.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-registered-v2\\03.png",
+      "source_bbox": [
+        881,
+        440,
+        3023,
+        2292
+      ],
+      "scale": 0.07282913165266107,
+      "registered_bbox": [
+        18,
+        36,
+        174,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-input\\04.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-registered-v2\\04.png",
+      "source_bbox": [
+        909,
+        199,
+        3096,
+        1988
+      ],
+      "scale": 0.07133058984910837,
+      "registered_bbox": [
+        18,
+        43,
+        174,
+        171
+      ],
+      "baseline": 170
+    },
+    {
+      "source": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-input\\05.png",
+      "output": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\feed-registered-v2\\05.png",
+      "source_bbox": [
+        881,
+        440,
+        3023,
+        2292
+      ],
+      "scale": 0.07282913165266107,
+      "registered_bbox": [
+        18,
+        36,
+        174,
+        171
+      ],
+      "baseline": 170
+    }
+  ]
+}

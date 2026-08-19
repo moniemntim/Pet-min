@@ -13,7 +13,7 @@ public static class AnimationPlanFactory
         4 => new AnimationRowSpec(5, new[] { 140, 140, 140, 140, 280 }, false),
         5 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 180 }, true),
         6 => new AnimationRowSpec(6, new[] { 150, 150, 150, 150, 150, 260 }, false),
-        7 => new AnimationRowSpec(6, new[] { 150, 150, 150, 150, 150, 260 }, false),
+        7 => new AnimationRowSpec(6, new[] { 220, 180, 180, 180, 180, 320 }, false),
         8 => new AnimationRowSpec(6, new[] { 150, 150, 150, 150, 150, 280 }, true),
         9 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 220 }, true),
         10 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 220 }, true),

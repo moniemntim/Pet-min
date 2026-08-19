@@ -1,0 +1,22 @@
+{
+  "source_atlas": "C:\\Users\\787\\Documents\\gogo\\src\\ShuBingDesktopPet\\Assets\\spritesheet.png",
+  "output_atlas": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\spritesheet-real-walk.png",
+  "frame_size": [
+    192,
+    208
+  ],
+  "columns": 8,
+  "rows": 11,
+  "replacements": [
+    {
+      "row": 1,
+      "frames_dir": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-right-registered",
+      "frame_count": 8
+    },
+    {
+      "row": 2,
+      "frames_dir": "C:\\Users\\787\\Documents\\gogo\\pet-art\\repair-original-photo-v2\\work\\walk-left-registered",
+      "frame_count": 8
+    }
+  ]
+}

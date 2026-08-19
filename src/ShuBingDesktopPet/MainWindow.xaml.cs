@@ -180,12 +180,8 @@ public partial class MainWindow : Window
         });
 
         var settingsItem = new ToolStripMenuItem("設定", null, (_, _) => _settingsWindow.ShowFrom(_settings));
-        var feedApple = new ToolStripMenuItem("蘋果", null, (_, _) => TryStartFeeding(PetFoodType.Apple));
-        var feedCarrot = new ToolStripMenuItem("紅蘿蔔", null, (_, _) => TryStartFeeding(PetFoodType.Carrot));
-        var feedPellet = new ToolStripMenuItem("飼料", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
+        var feedPellet = new ToolStripMenuItem("小餅乾（實拍）", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
         _menuFeed = new ToolStripMenuItem("餵食薯餅");
-        _menuFeed.DropDownItems.Add(feedApple);
-        _menuFeed.DropDownItems.Add(feedCarrot);
         _menuFeed.DropDownItems.Add(feedPellet);
         var moveHome = new ToolStripMenuItem("回到主螢幕", null, (_, _) => MoveToPrimaryMonitor());
 
@@ -838,10 +834,9 @@ public partial class MainWindow : Window
 
     private void RenderFeedOverlay(DateTime nowUtc)
     {
-        var isFeeding = _feedingController.IsActive;
         var isMessageVisible = _feedingController.IsCompletedMessageVisible(nowUtc);
 
-        if (!isFeeding && !isMessageVisible)
+        if (!isMessageVisible)
         {
             FeedOverlay.Visibility = Visibility.Collapsed;
             FeedStatusText.Text = string.Empty;
@@ -850,7 +845,7 @@ public partial class MainWindow : Window
 
         FeedOverlay.Visibility = Visibility.Visible;
         FeedStatusText.TextAlignment = TextAlignment.Center;
-        FeedStatusText.Text = isFeeding ? "餵食中" : "吃飽了！";
+        FeedStatusText.Text = "薯餅吃飽了！";
     }
 
     private void RestoreStartupPosition()
