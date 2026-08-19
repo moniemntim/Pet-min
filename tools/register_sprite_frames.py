@@ -24,6 +24,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-height", type=int, default=208)
     parser.add_argument("--canvas-width", type=int, default=192)
     parser.add_argument("--canvas-height", type=int, default=208)
+    parser.add_argument(
+        "--scale-y",
+        type=float,
+        default=1.0,
+        help="Optional vertical-only multiplier applied after uniform fit; 1.0 means no change.",
+    )
+    parser.add_argument(
+        "--target-height",
+        type=int,
+        default=None,
+        help=(
+            "Optional explicit sprite height after uniform fit, before vertical centering. "
+            "Takes precedence over --scale-y. Must be > 0."
+        ),
+    )
     parser.add_argument("--manifest", type=Path)
     return parser.parse_args()
 
@@ -58,7 +73,25 @@ def main() -> int:
             args.max_height / source_height,
         )
         target_width = max(1, round(source_width * scale))
-        target_height = max(1, round(source_height * scale))
+        uniform_target_height = max(1, round(source_height * scale))
+
+        if args.target_height is not None:
+            if args.target_height <= 0:
+                raise SystemExit(f"target-height must be > 0: {args.target_height}")
+            target_height = min(args.target_height, args.max_height)
+            scale_y = 1.0 if uniform_target_height == 0 else target_height / uniform_target_height
+        else:
+            if args.scale_y <= 0:
+                raise SystemExit(f"scale-y must be > 0: {args.scale_y}")
+            target_height = round(uniform_target_height * args.scale_y)
+            if target_height > args.max_height:
+                target_height = args.max_height
+            target_height = max(1, target_height)
+            scale_y = args.scale_y
+
+        if target_height > args.max_height:
+            raise SystemExit(f"target-height must not exceed max-height: {source}")
+
         if (target_width, target_height) != sprite.size:
             sprite = sprite.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
@@ -76,6 +109,8 @@ def main() -> int:
             "output": str(destination.resolve()),
             "source_bbox": list(alpha_bbox),
             "scale": scale,
+            "scale_y": scale_y,
+            "target_height": target_height,
             "registered_bbox": [left, top, left + target_width, top + target_height],
             "baseline": args.baseline,
         })

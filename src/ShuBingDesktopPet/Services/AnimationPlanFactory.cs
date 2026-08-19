@@ -7,8 +7,8 @@ public static class AnimationPlanFactory
     public static AnimationRowSpec RowSpec(int row) => row switch
     {
         0 => new AnimationRowSpec(6, new[] { 280, 110, 110, 140, 140, 320 }, true),
-        1 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 220 }, true),
-        2 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 220 }, true),
+        1 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 120 }, true),
+        2 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 120 }, true),
         3 => new AnimationRowSpec(4, new[] { 140, 140, 140, 280 }, false),
         4 => new AnimationRowSpec(5, new[] { 140, 140, 140, 140, 280 }, false),
         5 => new AnimationRowSpec(8, new[] { 120, 120, 120, 120, 120, 120, 120, 180 }, true),

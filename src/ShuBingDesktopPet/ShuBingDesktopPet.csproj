@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ShuBingDesktopPet</RootNamespace>
     <AssemblyName>ShuBingDesktopPet</AssemblyName>
-    <Version>1.1.0-rc.4</Version>
+    <Version>1.1.0-rc.5</Version>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
     <ApplicationIcon>Assets\ShuBingDesktopPet.ico</ApplicationIcon>
@@ -19,6 +19,13 @@
     <None Update="Assets\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+
+    <None Remove="Assets\Feeding\Apple\**\*" />
+    <None Remove="Assets\Feeding\Carrot\**\*" />
+    <None Remove="Assets\Feeding\Pellet\**\*" />
+    <Resource Include="Assets\Feeding\Apple\**\*" />
+    <Resource Include="Assets\Feeding\Carrot\**\*" />
+    <Resource Include="Assets\Feeding\Pellet\**\*" />
   </ItemGroup>
 
   <ItemGroup>
