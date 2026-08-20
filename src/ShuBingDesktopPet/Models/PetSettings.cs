@@ -2,7 +2,7 @@ namespace ShuBingDesktopPet.Models;
 
 public sealed record PetSettings
 {
-    public int SchemaVersion { get; init; } = 3;
+    public int SchemaVersion { get; init; } = 4;
     public bool RoamingEnabled { get; init; } = true;
     public RoamingScope RoamingScope { get; init; } = RoamingScope.CurrentScreen;
     public RoamingSpeed Speed { get; init; } = RoamingSpeed.Normal;
@@ -15,6 +15,9 @@ public sealed record PetSettings
     public int TotalFeedCount { get; init; } = 0;
     public DateTime? LastFedUtc { get; init; }
     public PetFoodType LastFoodType { get; init; } = PetFoodType.None;
+    public double FeedingDurationSeconds { get; init; } = 4.0;
+    public double ContinuousWalkDurationSeconds { get; init; } = 8.0;
+    public WalkingBodyStyle WalkingBodyStyle { get; init; } = WalkingBodyStyle.Current;
 }
 
 public enum RoamingScope
@@ -28,4 +31,10 @@ public enum RoamingSpeed
     Slow = 0,
     Normal = 1,
     Fast = 2
+}
+
+public enum WalkingBodyStyle
+{
+    Current = 0,
+    LongBody = 1
 }

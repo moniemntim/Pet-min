@@ -96,7 +96,7 @@ public class PetLogicTests
         var service = new PetSettingsService(path);
 
         var loaded = service.LoadOrDefault();
-        loaded.SchemaVersion.Should().Be(3);
+        loaded.SchemaVersion.Should().Be(4);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class PetLogicTests
         var service = new PetSettingsService(path);
         var loaded = service.LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(3);
+        loaded.SchemaVersion.Should().Be(4);
         loaded.TotalFeedCount.Should().Be(12);
         loaded.LastFoodType.Should().Be(PetFoodType.None);
     }
@@ -140,7 +140,7 @@ public class PetLogicTests
 
         var loaded = new PetSettingsService(path).LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(3);
+        loaded.SchemaVersion.Should().Be(4);
         loaded.RoamingEnabled.Should().BeFalse();
         loaded.Scale.Should().Be(1.25);
         loaded.TotalFeedCount.Should().Be(0);

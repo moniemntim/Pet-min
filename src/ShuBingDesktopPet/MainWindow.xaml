@@ -16,7 +16,7 @@
         Focusable="False">
     <Viewbox x:Name="PetViewbox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform" StretchDirection="Both">
         <Grid x:Name="PetRenderRoot" Width="192" Height="208" Background="Transparent">
-            <Image x:Name="FrameImage" Width="192" Height="208" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top"
+            <Image x:Name="FrameImage" Width="192" Height="208" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Top"
                    RenderTransformOrigin="0.5,1" RenderOptions.BitmapScalingMode="HighQuality">
                 <Image.RenderTransform>
                     <TransformGroup x:Name="FrameImageTransformGroup">

@@ -5,7 +5,7 @@
         Title="薯餅桌寵設定"
         WindowStartupLocation="CenterScreen"
         Width="360"
-        Height="420"
+        Height="560"
         ResizeMode="NoResize"
         WindowStyle="ToolWindow">
     <ScrollViewer>
@@ -18,6 +18,14 @@
         <ComboBox x:Name="SpeedBox" Margin="0,0,0,8" />
         <TextBlock Text="大小（75%–150%）" Margin="0,0,0,4" />
         <Slider x:Name="ScaleSlider" Minimum="0.75" Maximum="1.5" SmallChange="0.05" LargeChange="0.05" TickFrequency="0.05" IsSnapToTickEnabled="True" />
+        <TextBlock Text="寵物身形" Margin="0,10,0,4" />
+        <ComboBox x:Name="WalkingBodyStyleBox" Margin="0,0,0,8" />
+        <TextBlock Text="每次吃食物時間" Margin="0,0,0,4" />
+        <TextBlock x:Name="FeedingDurationLabel" Margin="0,0,0,2" />
+        <Slider x:Name="FeedingDurationSlider" Minimum="1" Maximum="20" SmallChange="0.5" LargeChange="1" TickFrequency="0.5" IsSnapToTickEnabled="True" />
+        <TextBlock Text="連續走路時間" Margin="0,10,0,4" />
+        <TextBlock x:Name="ContinuousWalkDurationLabel" Margin="0,0,0,2" />
+        <Slider x:Name="ContinuousWalkDurationSlider" Minimum="2" Maximum="60" SmallChange="1" LargeChange="5" TickFrequency="1" IsSnapToTickEnabled="True" />
         <CheckBox x:Name="ClickThroughBox" Content="滑鼠穿透" Margin="0,8,0,8" />
         <CheckBox x:Name="StartWithWindowsBox" Content="開機啟動" Margin="0,0,0,8" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">

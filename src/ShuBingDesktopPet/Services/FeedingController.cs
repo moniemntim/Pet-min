@@ -10,12 +10,14 @@ public sealed class FeedingController
     private readonly TimeSpan _completedMessageDuration = TimeSpan.FromSeconds(CompletedMessageSeconds);
 
     private PetFoodType _activeFood = PetFoodType.None;
+    private DateTime? _completeDueUtc;
     private DateTime _nextAllowedUtc = DateTime.MinValue;
     private DateTime? _completedMessageUntilUtc;
 
     public bool IsActive => _activeFood != PetFoodType.None;
     public PetFoodType ActiveFood => _activeFood;
     public DateTime NextAllowedUtc => _nextAllowedUtc;
+    public DateTime? CompleteDueUtc => _completeDueUtc;
 
     public bool IsCompletedMessageVisible(DateTime nowUtc)
     {
@@ -34,6 +36,9 @@ public sealed class FeedingController
     }
 
     public bool TryStart(PetFoodType food, DateTime nowUtc, bool isBusy)
+        => TryStart(food, nowUtc, isBusy, 4.0);
+
+    public bool TryStart(PetFoodType food, DateTime nowUtc, bool isBusy, double durationSeconds)
     {
         if (food is not (PetFoodType.Apple or PetFoodType.Carrot or PetFoodType.Pellet))
         {
@@ -46,15 +51,19 @@ public sealed class FeedingController
         }
 
         _activeFood = food;
+        var normalizedDuration = double.IsFinite(durationSeconds) ? durationSeconds : 4.0;
+        _completeDueUtc = nowUtc.AddSeconds(Math.Clamp(normalizedDuration, 1.0, 20.0));
         return true;
     }
 
     public bool TryComplete(DateTime nowUtc, out PetFoodType completedFood)
     {
-        completedFood = _activeFood;
-        if (_activeFood != PetFoodType.None)
+        completedFood = PetFoodType.None;
+        if (_activeFood != PetFoodType.None && _completeDueUtc is not null && nowUtc >= _completeDueUtc.Value)
         {
+            completedFood = _activeFood;
             _activeFood = PetFoodType.None;
+            _completeDueUtc = null;
             _nextAllowedUtc = nowUtc.Add(Cooldown);
             _completedMessageUntilUtc = nowUtc.Add(_completedMessageDuration);
             return true;
@@ -67,6 +76,7 @@ public sealed class FeedingController
     public void Cancel()
     {
         _activeFood = PetFoodType.None;
+        _completeDueUtc = null;
         _completedMessageUntilUtc = null;
     }
 

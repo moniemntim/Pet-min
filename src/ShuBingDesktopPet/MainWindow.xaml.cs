@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private readonly Dictionary<int, AnimationRowSpec> _rows = new();
     private readonly SpriteFrameCache? _frameCache;
     private readonly FeedingFrameCache _feedingFrameCache;
+    private readonly WalkingBodyFrameCache _walkingBodyFrameCache;
     private readonly AnimationSequencer _sequencer = new();
     private readonly ContextMenuStrip _trayMenu = new();
     private ToolStripMenuItem _menuVisible = null!;
@@ -43,6 +44,7 @@ public partial class MainWindow : Window
     private ToolStripMenuItem _menuStartWithWindows = null!;
     private ToolStripMenuItem _menuFeed = null!;
     private readonly FeedingController _feedingController = new();
+    private readonly RoamingWalkTimer _roamWalkTimer = new();
 
     private PetSettings _settings;
     private double _frameWidth = 192;
@@ -98,6 +100,7 @@ public partial class MainWindow : Window
             _frameCache = new SpriteFrameCache(spriteSource, _sprite.Rows, _sprite.Columns, _sprite.FrameWidth, _sprite.FrameHeight);
         }
         _feedingFrameCache = new FeedingFrameCache();
+        _walkingBodyFrameCache = new WalkingBodyFrameCache();
 
         _settingsWindow = new PetSettingsWindow(_settings, ApplySettingsRequested);
 
@@ -116,12 +119,14 @@ public partial class MainWindow : Window
 
         InitializeAnimationRows();
         BuildTray();
+        ApplyWalkingBodyStyleLayout();
         ApplyWindowScale(_settings.Scale);
         ApplyRoamingSpeed();
         UpdateWindowMenus();
         if (!_settings.RoamingEnabled)
         {
             _isRoaming = false;
+            _roamWalkTimer.Reset();
         }
 
         SourceInitialized += OnSourceInitialized;
@@ -277,8 +282,19 @@ public partial class MainWindow : Window
 
     private void ApplySettingsRequested(PetSettings settings)
     {
+        var previousWidthPx = _frameWidthPx;
+        var previousHeightPx = _frameHeightPx;
         _settings = _settingsService.Normalize(settings);
+        ApplyWalkingBodyStyleLayout();
         ApplyWindowScale(_settings.Scale);
+        if (_isSourceInitialized && previousWidthPx > 0 && previousHeightPx > 0 &&
+            (previousWidthPx != _frameWidthPx || previousHeightPx != _frameHeightPx))
+        {
+            MoveWindowPhysical(
+                _windowLeftPx - (_frameWidthPx - previousWidthPx) / 2,
+                _windowTopPx - (_frameHeightPx - previousHeightPx) / 2,
+                false);
+        }
         ApplyRoamingSpeed();
         ApplyClickThroughSetting(_settings.ClickThrough);
         UpdateWindowMenus();
@@ -290,7 +306,20 @@ public partial class MainWindow : Window
         if (!_settings.RoamingEnabled)
         {
             _isRoaming = false;
+            _roamWalkTimer.Reset();
         }
+    }
+
+    private void ApplyWalkingBodyStyleLayout()
+    {
+        var useWideCanvas = _settings.WalkingBodyStyle == WalkingBodyStyle.LongBody &&
+            _walkingBodyFrameCache.IsAvailable;
+        _frameWidth = useWideCanvas ? WalkingBodyFrameCache.ExpectedFrameWidth : _sprite.FrameWidth;
+        PetRenderRoot.Width = _frameWidth;
+        FeedOverlay.Width = _frameWidth;
+        FeedStatusText.Width = _frameWidth;
+        FrameImage.Width = _sprite.FrameWidth;
+        FrameImage.Height = _sprite.FrameHeight;
     }
 
     private void ApplyClickThroughSetting(bool clickThrough)
@@ -334,23 +363,13 @@ public partial class MainWindow : Window
             _sequencer.ApplyPlan(plan, spec);
             _sequencer.Tick(deltaMs, spec);
 
-            if (_sequencer.CompletedOneShot && _reaction is not null && plan.IsOneShot)
+            if (_reaction == PetAction.Feed && _feedingController.TryComplete(now, out var dueFood))
             {
-                if (_reaction == PetAction.Feed && _feedingController.TryComplete(now, out var completedFood))
-                {
-                    _settings = _settingsService.Normalize(_settings with
-                    {
-                        TotalFeedCount = _settings.TotalFeedCount < int.MaxValue
-                            ? _settings.TotalFeedCount + 1
-                            : int.MaxValue,
-                        LastFedUtc = now,
-                        LastFoodType = completedFood
-                    });
-                    _settingsService.Save(_settings);
-                    _feedCelebrationActive = true;
-                    SetReaction(PetAction.HappyJump);
-                }
-                else if (_reaction == PetAction.HappyJump && _feedCelebrationActive)
+                CompleteFeeding(now, dueFood);
+            }
+            else if (_sequencer.CompletedOneShot && _reaction is not null && plan.IsOneShot)
+            {
+                if (_reaction == PetAction.HappyJump && _feedCelebrationActive)
                 {
                     _feedCelebrationActive = false;
                     SetReaction(null);
@@ -366,6 +385,19 @@ public partial class MainWindow : Window
         RenderFeedOverlay(now);
     }
 
+    private void CompleteFeeding(DateTime now, PetFoodType completedFood)
+    {
+        _settings = _settingsService.Normalize(_settings with
+        {
+            TotalFeedCount = _settings.TotalFeedCount < int.MaxValue ? _settings.TotalFeedCount + 1 : int.MaxValue,
+            LastFedUtc = now,
+            LastFoodType = completedFood
+        });
+        _settingsService.Save(_settings);
+        _feedCelebrationActive = true;
+        SetReaction(PetAction.HappyJump);
+    }
+
     private AnimationPlan ResolveAnimationPlan()
     {
         if (_dragging)
@@ -375,6 +407,11 @@ public partial class MainWindow : Window
 
         if (_reaction.HasValue)
         {
+            if (_reaction == PetAction.Feed)
+            {
+                return new AnimationPlan(7, Loop: true, IsOneShot: false);
+            }
+
             return AnimationPlanFactory.CreateRowPlanForAction(_reaction.Value);
         }
 
@@ -438,11 +475,15 @@ public partial class MainWindow : Window
         var localCursor = new System.Windows.Point(
             (cursorPx.x - _windowLeftPx) / DpiScaleX,
             (cursorPx.y - _windowTopPx) / DpiScaleY);
-        var localFrame = new Rect(0, 0, _frameWidth * _settings.Scale, _frameHeight * _settings.Scale);
+        var usesWideWalkingFrame = _settings.WalkingBodyStyle == WalkingBodyStyle.LongBody &&
+            _walkingBodyFrameCache.IsAvailable && _settings.RoamingEnabled && _isRoaming;
+        var contentWidth = usesWideWalkingFrame ? WalkingBodyFrameCache.ExpectedFrameWidth : _sprite.FrameWidth;
+        var contentLeft = Math.Max(0, (_frameWidth - contentWidth) * _settings.Scale / 2.0);
+        var localFrame = new Rect(contentLeft, 0, contentWidth * _settings.Scale, _frameHeight * _settings.Scale);
 
         if (PetGeometry.IsInHeadZone(localFrame, localCursor))
         {
-            var sideRight = localCursor.X >= localFrame.Width / 2;
+            var sideRight = localCursor.X >= localFrame.X + localFrame.Width / 2;
             if (_headZoneReady && _headSideRight != sideRight)
             {
                 _headSweepCount++;
@@ -466,7 +507,7 @@ public partial class MainWindow : Window
 
     private void UpdateRoaming(double dtMs)
     {
-        if (!_settings.RoamingEnabled || _dragging || _reaction is not null)
+        if (!_settings.RoamingEnabled || _dragCandidate || _dragging || _reaction is not null)
         {
             return;
         }
@@ -475,6 +516,14 @@ public partial class MainWindow : Window
         {
             if (_roamStopSeconds > 0)
             {
+                _roamNoProgressMs = 0;
+                return;
+            }
+
+            if (_roamWalkTimer.Advance(dtMs / 1000.0))
+            {
+                _isRoaming = false;
+                _roamStopSeconds = _random.NextDouble() * 2.5 + 1;
                 _roamNoProgressMs = 0;
                 return;
             }
@@ -489,8 +538,8 @@ public partial class MainWindow : Window
             if (step.ReachedTarget)
             {
                 MoveWindowPhysical((int)Math.Round(_roamTargetPx.X), (int)Math.Round(_roamTargetPx.Y), clampToCurrentScreenOnly);
-                _isRoaming = false;
-                _roamStopSeconds = _random.NextDouble() * 2.5 + 1;
+                _roamTargetPx = NextRoamTarget();
+                _roamDirection = _roamTargetPx - new System.Windows.Point(_windowLeftPx, _windowTopPx);
                 _roamNoProgressMs = 0;
             }
             else
@@ -502,8 +551,8 @@ public partial class MainWindow : Window
                     _roamNoProgressMs += dtMs;
                     if (_roamNoProgressMs >= RoamingNoProgressMs)
                     {
-                        _isRoaming = false;
-                        _roamStopSeconds = 1;
+                        _roamTargetPx = NextRoamTarget();
+                        _roamDirection = _roamTargetPx - new System.Windows.Point(_windowLeftPx, _windowTopPx);
                         _roamNoProgressMs = 0;
                     }
                 }
@@ -528,6 +577,7 @@ public partial class MainWindow : Window
         _roamTargetPx = NextRoamTarget();
         _roamDirection = _roamTargetPx - new System.Windows.Point(_windowLeftPx, _windowTopPx);
         _isRoaming = true;
+        _roamWalkTimer.Start(_settings.ContinuousWalkDurationSeconds);
         _roamNoProgressMs = 0;
     }
 
@@ -742,7 +792,7 @@ public partial class MainWindow : Window
     {
         var now = DateTime.UtcNow;
         var blocked = _dragging || _dragCandidate || _reaction is not null;
-        if (_feedingController.TryStart(foodType, now, blocked))
+        if (_feedingController.TryStart(foodType, now, blocked, _settings.FeedingDurationSeconds))
         {
             _singleClickTimer.Stop();
             _clickArbiter.CancelPending();
@@ -788,7 +838,13 @@ public partial class MainWindow : Window
             ? _feedingFrameCache.GetFrame(_feedingController.ActiveFood, boundedCol)
             : null;
         var usingFeedingFrame = feedingFrame is not null;
-        BitmapSource? frame = feedingFrame ?? frameCache.GetFrame(boundedRow, boundedCol);
+        var isLongBodyWalk = _walkingBodyFrameCache.IsAvailable &&
+            _settings.WalkingBodyStyle == WalkingBodyStyle.LongBody &&
+            _settings.RoamingEnabled && _isRoaming && (boundedRow is 1 or 2);
+        var longBodyFrame = isLongBodyWalk
+            ? _walkingBodyFrameCache.GetFrame(boundedRow == 1, boundedCol)
+            : null;
+        BitmapSource? frame = feedingFrame ?? longBodyFrame ?? frameCache.GetFrame(boundedRow, boundedCol);
 
         if (frame is not null)
         {
@@ -807,9 +863,11 @@ public partial class MainWindow : Window
         _cachedRenderedRow = boundedRow;
         _cachedRenderedCol = boundedCol;
         _cachedRenderedFrame = frame;
+        FrameImage.Width = frame?.PixelWidth ?? _sprite.FrameWidth;
+        FrameImage.Height = frame?.PixelHeight ?? _sprite.FrameHeight;
         if (FrameImageScaleTransform is ScaleTransform frameScaleTransform)
         {
-            var scale = usingFeedingFrame
+            var scale = usingFeedingFrame || longBodyFrame is not null
                 ? new AnimationFrameScale(1, 1)
                 : AnimationVisualScale.GetFrameScale(boundedRow);
             frameScaleTransform.ScaleX = scale.ScaleX;
@@ -818,7 +876,7 @@ public partial class MainWindow : Window
 
         if (FrameImageTranslateTransform is TranslateTransform frameTranslateTransform)
         {
-            if (usingFeedingFrame)
+            if (usingFeedingFrame || longBodyFrame is not null)
             {
                 frameTranslateTransform.X = 0;
                 frameTranslateTransform.Y = 0;

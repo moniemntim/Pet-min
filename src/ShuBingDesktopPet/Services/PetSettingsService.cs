@@ -8,12 +8,12 @@ namespace ShuBingDesktopPet.Services;
 
 public sealed class PetSettingsService
 {
-    private const int CurrentSchemaVersion = 3;
+    private const int CurrentSchemaVersion = 4;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
-        Converters = { new PetFoodTypeJsonConverter(), new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        Converters = { new PetFoodTypeJsonConverter(), new WalkingBodyStyleJsonConverter(), new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
     public string SettingsPath { get; }
@@ -95,6 +95,13 @@ public sealed class PetSettingsService
             _ => PetFoodType.None
         };
         var lastFedUtc = settings.LastFedUtc?.ToUniversalTime();
+        var feedingDurationSeconds = double.IsFinite(settings.FeedingDurationSeconds) ? settings.FeedingDurationSeconds : 4.0;
+        feedingDurationSeconds = Math.Clamp(feedingDurationSeconds, 1.0, 20.0);
+        var continuousWalkDurationSeconds = double.IsFinite(settings.ContinuousWalkDurationSeconds) ? settings.ContinuousWalkDurationSeconds : 8.0;
+        continuousWalkDurationSeconds = Math.Clamp(continuousWalkDurationSeconds, 2.0, 60.0);
+        var walkingBodyStyle = settings.WalkingBodyStyle is WalkingBodyStyle.Current or WalkingBodyStyle.LongBody
+            ? settings.WalkingBodyStyle
+            : WalkingBodyStyle.Current;
 
         return new PetSettings
         {
@@ -110,8 +117,42 @@ public sealed class PetSettingsService
             LastY = y,
             TotalFeedCount = totalFeedCount,
             LastFedUtc = lastFedUtc,
-            LastFoodType = lastFoodType
+            LastFoodType = lastFoodType,
+            FeedingDurationSeconds = feedingDurationSeconds,
+            ContinuousWalkDurationSeconds = continuousWalkDurationSeconds,
+            WalkingBodyStyle = walkingBodyStyle
         };
+    }
+}
+
+internal sealed class WalkingBodyStyleJsonConverter : JsonConverter<WalkingBodyStyle>
+{
+    public override WalkingBodyStyle Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var raw = reader.GetString();
+            if (string.Equals(raw, "longBody", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(raw, "long_body", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(raw, "long-body", StringComparison.OrdinalIgnoreCase))
+            {
+                return WalkingBodyStyle.LongBody;
+            }
+
+            return WalkingBodyStyle.Current;
+        }
+
+        if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var value))
+        {
+            return value == (int)WalkingBodyStyle.LongBody ? WalkingBodyStyle.LongBody : WalkingBodyStyle.Current;
+        }
+
+        return WalkingBodyStyle.Current;
+    }
+
+    public override void Write(Utf8JsonWriter writer, WalkingBodyStyle value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value == WalkingBodyStyle.LongBody ? "longBody" : "current");
     }
 }
 

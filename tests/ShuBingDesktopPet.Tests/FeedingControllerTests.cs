@@ -29,7 +29,7 @@ public class FeedingControllerTests
         controller.TryStart(PetFoodType.Apple, now, isBusy: false).Should().BeTrue();
         controller.IsActive.Should().BeTrue();
         controller.TryStart(PetFoodType.Carrot, now, isBusy: false).Should().BeFalse();
-        controller.TryComplete(now, out var _).Should().BeTrue();
+        controller.TryComplete(now.AddSeconds(4), out var _).Should().BeTrue();
 
         controller.Cancel();
         controller.TryStart((PetFoodType)999, now, isBusy: false).Should().BeFalse();
@@ -56,10 +56,10 @@ public class FeedingControllerTests
         var start = DateTime.UtcNow;
 
         controller.TryStart(PetFoodType.Pellet, start, isBusy: false).Should().BeTrue();
-        controller.TryComplete(start, out _).Should().BeTrue();
+        controller.TryComplete(start.AddSeconds(4), out _).Should().BeTrue();
 
-        controller.TryStart(PetFoodType.Apple, start.AddSeconds(2.9), isBusy: false).Should().BeFalse();
-        controller.TryStart(PetFoodType.Apple, start.AddSeconds(3), isBusy: false).Should().BeTrue();
+        controller.TryStart(PetFoodType.Apple, start.AddSeconds(6.9), isBusy: false).Should().BeFalse();
+        controller.TryStart(PetFoodType.Apple, start.AddSeconds(7), isBusy: false).Should().BeTrue();
     }
 
     [Fact]
@@ -70,11 +70,13 @@ public class FeedingControllerTests
 
         controller.TryStart(PetFoodType.Carrot, start, isBusy: false).Should().BeTrue();
         controller.IsCompletedMessageVisible(start).Should().BeFalse();
-        controller.TryComplete(start, out var completedFood).Should().BeTrue();
+        controller.TryComplete(start.AddSeconds(3.9), out var pendingFood).Should().BeFalse();
+        pendingFood.Should().Be(PetFoodType.None);
+        controller.TryComplete(start.AddSeconds(4), out var completedFood).Should().BeTrue();
         completedFood.Should().Be(PetFoodType.Carrot);
         controller.IsActive.Should().BeFalse();
-        controller.IsCompletedMessageVisible(start).Should().BeTrue();
-        controller.IsCompletedMessageVisible(start.AddSeconds(2)).Should().BeFalse();
+        controller.IsCompletedMessageVisible(start.AddSeconds(4)).Should().BeTrue();
+        controller.IsCompletedMessageVisible(start.AddSeconds(6)).Should().BeFalse();
     }
 
     [Fact]

@@ -42,6 +42,10 @@ public partial class PetSettingsWindow : Window
             _ => 1
         };
         ScaleSlider.Value = settings.Scale;
+        WalkingBodyStyleBox.SelectedIndex = settings.WalkingBodyStyle == WalkingBodyStyle.LongBody ? 1 : 0;
+        FeedingDurationSlider.Value = settings.FeedingDurationSeconds;
+        ContinuousWalkDurationSlider.Value = settings.ContinuousWalkDurationSeconds;
+        UpdateDurationLabels();
         ClickThroughBox.IsChecked = settings.ClickThrough;
         StartWithWindowsBox.IsChecked = settings.StartWithWindows;
     }
@@ -50,10 +54,13 @@ public partial class PetSettingsWindow : Window
     {
         RoamingScopeBox.ItemsSource = new[] { "目前螢幕", "所有螢幕" };
         SpeedBox.ItemsSource = new[] { "慢", "正常", "快" };
+        WalkingBodyStyleBox.ItemsSource = new[] { "目前身形（原本）", "修長身形" };
         RoamingScopeBox.SelectedIndex = 0;
         SpeedBox.SelectedIndex = 1;
         ScaleSlider.Value = 1.0;
         ScaleSlider.IsSnapToTickEnabled = true;
+        FeedingDurationSlider.ValueChanged += (_, _) => UpdateDurationLabels();
+        ContinuousWalkDurationSlider.ValueChanged += (_, _) => UpdateDurationLabels();
 
         SaveButton.Click += (_, _) =>
         {
@@ -63,6 +70,9 @@ public partial class PetSettingsWindow : Window
                 RoamingScope = RoamingScopeBox.SelectedIndex == 1 ? RoamingScope.AllScreens : RoamingScope.CurrentScreen,
                 Speed = SpeedBox.SelectedIndex == 1 ? RoamingSpeed.Normal : (SpeedBox.SelectedIndex == 2 ? RoamingSpeed.Fast : RoamingSpeed.Slow),
                 Scale = ScaleSlider.Value,
+                WalkingBodyStyle = WalkingBodyStyleBox.SelectedIndex == 1 ? WalkingBodyStyle.LongBody : WalkingBodyStyle.Current,
+                FeedingDurationSeconds = Math.Round(FeedingDurationSlider.Value, 1),
+                ContinuousWalkDurationSeconds = Math.Round(ContinuousWalkDurationSlider.Value, 0),
                 ClickThrough = ClickThroughBox.IsChecked == true,
                 StartWithWindows = StartWithWindowsBox.IsChecked == true
             };
@@ -95,5 +105,18 @@ public partial class PetSettingsWindow : Window
         e.Cancel = true;
         Hide();
         base.OnClosing(e);
+    }
+
+    private void UpdateDurationLabels()
+    {
+        if (FeedingDurationLabel is not null)
+        {
+            FeedingDurationLabel.Text = $"{FeedingDurationSlider.Value:0.#} 秒";
+        }
+
+        if (ContinuousWalkDurationLabel is not null)
+        {
+            ContinuousWalkDurationLabel.Text = $"{ContinuousWalkDurationSlider.Value:0} 秒";
+        }
     }
 }

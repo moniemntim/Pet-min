@@ -1,0 +1,7 @@
+Edit and recompose the first visible image into a clear 2 rows × 4 columns grid, reading order top row frames 0–3 then bottom row frames 4–7. The first image locks the eight approved left-facing walking poses, gait sequence, moderate cadence, idle-matched warm coat and glossy short fur; preserve those exactly as the source of truth.
+
+Use the wider per-cell space to naturally lengthen each hamster: increase nose-to-rump/tail occupied width by 15–20% relative to the source, mainly extending shoulder-to-hip torso and lowering/flattening the back line. Keep head/face size unchanged, legs anatomically correct, medium step length, continuous grounded leftward walk, and common foot baseline within each row. Do not stretch the whole image or enlarge heads. Each of 8 complete poses must be fully visible, separated with ample spacing, and never touch a neighboring pose.
+
+Use the second visible idle image to strictly preserve the coat/material: warm golden-brown head and rump, clean bright white patches, short smooth fine fur, realistic crisp detail, natural glossy highlights and warm contrast. No gray haze, matte wool, yellow cast, or overexposure.
+
+Backdrop must be perfectly uniform opaque pure #00FF00 chroma green across the entire 2×4 image: no checkerboard, gradient, texture, shadow, floor, halo, grid lines, labels, text, or watermark. Output exactly 8 poses, all screen-left, in the specified 2×4 reading order.
