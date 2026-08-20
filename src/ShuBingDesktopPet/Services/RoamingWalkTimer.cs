@@ -1,6 +1,6 @@
 namespace ShuBingDesktopPet.Services;
 
-/// <summary>Tracks one continuous walking episode and is advanced only while the pet can walk.</summary>
+/// <summary>Tracks one continuous walking episode. It is advanced only while the pet is free to walk.</summary>
 public sealed class RoamingWalkTimer
 {
     public double RemainingSeconds { get; private set; }
@@ -14,11 +14,7 @@ public sealed class RoamingWalkTimer
 
     public bool Advance(double elapsedSeconds)
     {
-        if (!IsActive)
-        {
-            return true;
-        }
-
+        if (!IsActive) return true;
         var normalizedElapsed = double.IsFinite(elapsedSeconds) && elapsedSeconds > 0
             ? elapsedSeconds
             : 0;

@@ -40,11 +40,17 @@ public partial class MainWindow : Window
     private readonly ContextMenuStrip _trayMenu = new();
     private ToolStripMenuItem _menuVisible = null!;
     private ToolStripMenuItem _menuRoaming = null!;
+    private ToolStripMenuItem _menuObsCapture = null!;
     private ToolStripMenuItem _menuClickThrough = null!;
     private ToolStripMenuItem _menuStartWithWindows = null!;
     private ToolStripMenuItem _menuFeed = null!;
     private readonly FeedingController _feedingController = new();
-    private readonly RoamingWalkTimer _roamWalkTimer = new();
+    private readonly TwitchTokenStore _twitchTokenStore = new();
+    private readonly TwitchEventSubClient _twitchClient;
+    private readonly TwitchFeedQueue _twitchFeedQueue = new();
+    private ToolStripMenuItem _menuTwitch = null!;
+    private ToolStripMenuItem _menuTwitchConnect = null!;
+    private ObsCaptureWindow? _obsCaptureWindow;
 
     private PetSettings _settings;
     private double _frameWidth = 192;
@@ -83,6 +89,7 @@ public partial class MainWindow : Window
     private Screen? _roamMonitor;
     private MonitorArea? _dragStartMonitor;
     private double _roamNoProgressMs;
+    private readonly RoamingWalkTimer _roamWalkTimer = new();
     private const double HeadActionDeadZoneDip = 24.0;
     private const double GroomTriggerDistanceDip = 140.0;
     private const double GazeDistanceDip = 420.0;
@@ -93,6 +100,60 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _settings = _settingsService.LoadOrDefault();
+        _twitchClient = new TwitchEventSubClient(_twitchTokenStore);
+        _twitchClient.CheerReceived += cheer =>
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!_disposed && _settings.TwitchEnabled && cheer.Bits >= _settings.TwitchMinimumBits)
+                {
+                    _twitchFeedQueue.EnqueuePellet();
+                }
+            });
+        };
+        _twitchClient.DeviceCodeReady += (uri, code) =>
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _trayIcon.ShowBalloonTip(8000, "Twitch 授權", $"請輸入驗證碼：{code}", ToolTipIcon.Info);
+                try
+                {
+                    Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
+                }
+                catch
+                {
+                    UpdateTwitchMenu($"請開啟授權頁並輸入 {code}");
+                }
+            });
+        };
+        _twitchClient.StatusChanged += status =>
+        {
+            if (!_disposed)
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (!_disposed)
+                    {
+                        UpdateTwitchMenu(status.Message);
+                    }
+                });
+            }
+        };
         _sprite = SpriteSheet.Load(AppDomain.CurrentDomain.BaseDirectory);
         _interop = new WindowInteropHelper(this);
         if (_sprite.Source is BitmapSource spriteSource)
@@ -119,6 +180,7 @@ public partial class MainWindow : Window
 
         InitializeAnimationRows();
         BuildTray();
+        ApplyTwitchSettings();
         ApplyWalkingBodyStyleLayout();
         ApplyWindowScale(_settings.Scale);
         ApplyRoamingSpeed();
@@ -173,6 +235,11 @@ public partial class MainWindow : Window
             _settings = _settings with { RoamingEnabled = !_settings.RoamingEnabled };
             ApplySettingsRequested(_settings);
         });
+        _menuObsCapture = new ToolStripMenuItem("OBS 擷取：關閉", null, (_, _) =>
+        {
+            _settings = _settings with { ObsCaptureEnabled = !_settings.ObsCaptureEnabled };
+            ApplySettingsRequested(_settings);
+        });
         _menuClickThrough = new ToolStripMenuItem("滑鼠穿透：關閉", null, (_, _) =>
         {
             _settings = _settings with { ClickThrough = !_settings.ClickThrough };
@@ -188,14 +255,20 @@ public partial class MainWindow : Window
         var feedPellet = new ToolStripMenuItem("種子棒（薯餅實拍）", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
         _menuFeed = new ToolStripMenuItem("餵食薯餅");
         _menuFeed.DropDownItems.Add(feedPellet);
+        _menuTwitch = new ToolStripMenuItem("Twitch：關閉");
+        _menuTwitchConnect = new ToolStripMenuItem("連線／重新授權 Twitch", null, (_, _) => ConnectTwitch());
+        _menuTwitch.DropDownItems.Add(_menuTwitchConnect);
+        _menuTwitch.DropDownItems.Add(new ToolStripMenuItem("中斷 Twitch", null, (_, _) => DisconnectTwitch()));
         var moveHome = new ToolStripMenuItem("回到主螢幕", null, (_, _) => MoveToPrimaryMonitor());
 
         var exit = new ToolStripMenuItem("退出", null, (_, _) => global::System.Windows.Application.Current?.Shutdown());
 
         _trayMenu.Items.Add(_menuVisible);
         _trayMenu.Items.Add(_menuRoaming);
+        _trayMenu.Items.Add(_menuObsCapture);
         _trayMenu.Items.Add(_menuClickThrough);
         _trayMenu.Items.Add(_menuFeed);
+        _trayMenu.Items.Add(_menuTwitch);
         _trayMenu.Items.Add(settingsItem);
         _trayMenu.Items.Add(_menuStartWithWindows);
         _trayMenu.Items.Add(moveHome);
@@ -220,6 +293,7 @@ public partial class MainWindow : Window
         PetNativeWindow.EnsureLayered(_interop.Handle);
         ApplyWindowScale(_settings.Scale, applySize: true);
         ApplyClickThroughSetting(_settings.ClickThrough);
+        ApplyObsCaptureWindow();
         RestoreStartupPosition();
         _startupManager.SetStartWithWindows(_settings.StartWithWindows, Environment.ProcessPath ?? string.Empty);
         UpdateWindowMenus();
@@ -285,6 +359,7 @@ public partial class MainWindow : Window
         var previousWidthPx = _frameWidthPx;
         var previousHeightPx = _frameHeightPx;
         _settings = _settingsService.Normalize(settings);
+        ApplyTwitchSettings();
         ApplyWalkingBodyStyleLayout();
         ApplyWindowScale(_settings.Scale);
         if (_isSourceInitialized && previousWidthPx > 0 && previousHeightPx > 0 &&
@@ -297,6 +372,7 @@ public partial class MainWindow : Window
         }
         ApplyRoamingSpeed();
         ApplyClickThroughSetting(_settings.ClickThrough);
+        ApplyObsCaptureWindow();
         UpdateWindowMenus();
         _startupManager.SetStartWithWindows(_settings.StartWithWindows, Environment.ProcessPath ?? string.Empty);
         _settingsService.Save(_settings);
@@ -345,8 +421,119 @@ public partial class MainWindow : Window
     private void UpdateWindowMenus()
     {
         _menuRoaming.Text = _settings.RoamingEnabled ? "漫遊：開啟" : "漫遊：關閉";
+        _menuObsCapture.Text = _settings.ObsCaptureEnabled ? "OBS 擷取：開啟" : "OBS 擷取：關閉";
         _menuClickThrough.Text = _settings.ClickThrough ? "滑鼠穿透：開啟" : "滑鼠穿透：關閉";
         _menuStartWithWindows.Text = _settings.StartWithWindows ? "開機啟動：開啟" : "開機啟動：關閉";
+        _menuTwitch.Text = _settings.TwitchEnabled ? $"Twitch：{_twitchClient.StatusMessage}" : "Twitch：關閉";
+    }
+
+    private void UpdateTwitchMenu(string message)
+    {
+        if (_menuTwitch is not null) _menuTwitch.Text = _settings.TwitchEnabled ? $"Twitch：{message}" : "Twitch：關閉";
+    }
+
+    private void ApplyTwitchSettings()
+    {
+        if (!_settings.TwitchEnabled)
+        {
+            _twitchClient.Stop();
+            _twitchFeedQueue.Clear();
+            return;
+        }
+
+        var clientId = _settings.TwitchClientId;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _twitchClient.StartAsync(clientId);
+            }
+            catch (Exception ex)
+            {
+                if (!_disposed)
+                {
+                    _ = Dispatcher.BeginInvoke(() => UpdateTwitchMenu("錯誤：" + ex.Message));
+                }
+            }
+        });
+    }
+
+    private void ConnectTwitch()
+    {
+        if (!_settings.TwitchEnabled || string.IsNullOrWhiteSpace(_settings.TwitchClientId))
+        {
+            _trayIcon.ShowBalloonTip(5000, "Twitch", "請先在設定填寫 Client ID 並啟用 Twitch。", ToolTipIcon.Warning);
+            return;
+        }
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _twitchClient.AuthorizeAsync(_settings.TwitchClientId);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                if (!_disposed)
+                {
+                    _ = Dispatcher.BeginInvoke(() => UpdateTwitchMenu("錯誤：" + ex.Message));
+                }
+            }
+        });
+    }
+
+    private void DisconnectTwitch()
+    {
+        _twitchClient.Stop();
+        _twitchTokenStore.Clear();
+        _twitchFeedQueue.Clear();
+        _settings = _settings with { TwitchEnabled = false };
+        _settingsService.Save(_settings);
+        UpdateWindowMenus();
+    }
+
+    private void ApplyObsCaptureWindow()
+    {
+        if (_settings.ObsCaptureEnabled)
+        {
+            EnsureObsCaptureWindow();
+            return;
+        }
+
+        CloseObsCaptureWindow();
+    }
+
+    private void EnsureObsCaptureWindow()
+    {
+        if (_obsCaptureWindow is null)
+        {
+            var window = new ObsCaptureWindow(_sprite, _frameCache, _settings);
+            window.Closed += (_, _) =>
+            {
+                if (ReferenceEquals(_obsCaptureWindow, window))
+                {
+                    _obsCaptureWindow = null;
+                }
+            };
+            _obsCaptureWindow = window;
+            window.Show();
+            return;
+        }
+
+        _obsCaptureWindow.ApplySettings(_settings);
+    }
+
+    private void CloseObsCaptureWindow()
+    {
+        if (_obsCaptureWindow is null)
+        {
+            return;
+        }
+
+        _obsCaptureWindow.CloseFromHost();
+        _obsCaptureWindow = null;
     }
 
     private void OnTick(object? sender, EventArgs e)
@@ -354,6 +541,10 @@ public partial class MainWindow : Window
         var deltaMs = Math.Max(1.0, _clock.Elapsed.TotalMilliseconds);
         _clock.Restart();
         var now = DateTime.UtcNow;
+        if (_settings.TwitchEnabled)
+        {
+            _twitchFeedQueue.TryStartFeeding(TryStartFeeding);
+        }
 
         UpdateCursorBehavior(deltaMs);
         UpdateRoaming(deltaMs);
@@ -788,7 +979,7 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void TryStartFeeding(PetFoodType foodType)
+    private bool TryStartFeeding(PetFoodType foodType)
     {
         var now = DateTime.UtcNow;
         var blocked = _dragging || _dragCandidate || _reaction is not null;
@@ -798,7 +989,9 @@ public partial class MainWindow : Window
             _clickArbiter.CancelPending();
             _feedCelebrationActive = false;
             SetReaction(PetAction.Feed);
+            return true;
         }
+        return false;
     }
 
     private void OnSingleClickTimerTick(object? sender, EventArgs e)
@@ -1193,6 +1386,7 @@ public partial class MainWindow : Window
         }
 
         _disposed = true;
+        _twitchClient.Stop();
         _feedingController.Cancel();
         _feedCelebrationActive = false;
         _tickTimer.Stop();
@@ -1208,6 +1402,8 @@ public partial class MainWindow : Window
             _trayIconImage = null;
         }
         _settingsWindow.CloseFromHost();
+        CloseObsCaptureWindow();
+        _twitchClient.DisposeAsync().AsTask().GetAwaiter().GetResult();
         SaveCurrentPosition();
         base.OnClosed(e);
     }

@@ -1,12 +1,13 @@
 # 薯餅桌寵
 
-目前版本：`v1.1.0-rc.7` 候選（餵食功能 RC）；`v1.0.0` 為餵食功能前穩定基準。
+目前版本：`v1.1.0-rc.8` 候選（Twitch Bits／OBS 擷取整合）；`v1.0.0` 為餵食功能前穩定基準。
 
 以專案內 81 張薯餅實物照片共同還原的 Windows 10/11 寫實桌面寵物。
 
 ## 功能
 
 - 透明、無邊框、永遠置頂，不顯示在工作列。
+- 可透過系統匣直接開啟「薯餅 OBS 擷取」獨立透明捕捉視窗，設定固定尺寸（1280x720、1920x1080、2560x1440、3840x2160）後，OBS 以 `Window Capture` 可直接抓到薯餅在畫布內行走。
 - 按住寵物移動超過 6 DIP 後拖曳；點擊抬爪、雙擊跳躍、摸頭與游標追視。
 - 可開關自主漫遊，支援目前螢幕／所有螢幕、三段速度與 75%–150% 大小。
 - 自動避開工作列並保持完整可見；支援負座標、多螢幕與 per-monitor DPI。
@@ -14,8 +15,7 @@
 - 右鍵寵物或系統匣選「餵食薯餅」→「種子棒（薯餅實拍）」；動畫直接使用薯餅啃種子棒的原照連拍，餵食時暫停漫遊與其他左鍵互動，完成後顯示「吃飽了！」並開心跳躍，3 秒冷卻。
 - EXE、設定視窗與系統匣使用薯餅正面照片圖示，內含 16–256 px 多尺寸 Windows 圖示。
 - 「所有螢幕」漫遊會先走到目前螢幕邊界，再從目的螢幕對應入口繼續行走，支援螢幕間隙與負座標排列。
-- 修長走路、主圖集 88 格及 18 張實拍餵食影格共用同一隻薯餅影片的多幀色彩基準；低飽和臉部中間調也會校正，不出現黑臉或過暗狀態。
-- 設定與最後位置保存於 `%LOCALAPPDATA%\ShuBingDesktopPet\settings.json`。
+- 設定（含 OBS 擷取與 Twitch 非敏感設定）與最後位置保存於 `%LOCALAPPDATA%\ShuBingDesktopPet\settings.json`，目前 schema 為 `6`，舊設定會自動升級。
 
 ## 使用可攜版
 
@@ -44,3 +44,7 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 - [手動驗收](docs/manual-qa.md) 與 [驗證報告](docs/verification-report.md)：目前的測試與人工檢查紀錄。
 
 餵食功能目前以 `v1.1.0` 候選版本維護；`v1.0.0` 保留為加入餵食前可回復的穩定基準。
+
+### Twitch Bits 餵食
+
+設定視窗可啟用 Twitch，填入 Twitch Developer Console 建立的 Public app Client ID，並設定最低 Bits。按系統匣選單的連線後會開啟 Twitch Device Code 授權頁；授權本人必須是頻道擁有者，並允許 `bits:read`。收到 `channel.cheer` 後會以種子棒餵食薯餅（佇列最多 20 次）。Token 使用 Windows CurrentUser DPAPI 保存於本機，不會顯示在一般設定檔或 UI。

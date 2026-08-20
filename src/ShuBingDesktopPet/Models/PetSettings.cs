@@ -2,13 +2,19 @@ namespace ShuBingDesktopPet.Models;
 
 public sealed record PetSettings
 {
-    public int SchemaVersion { get; init; } = 4;
+    public int SchemaVersion { get; init; } = 6;
+    public bool TwitchEnabled { get; init; } = false;
+    public string TwitchClientId { get; init; } = string.Empty;
+    public int TwitchMinimumBits { get; init; } = 1;
     public bool RoamingEnabled { get; init; } = true;
     public RoamingScope RoamingScope { get; init; } = RoamingScope.CurrentScreen;
     public RoamingSpeed Speed { get; init; } = RoamingSpeed.Normal;
     public double Scale { get; init; } = 1.0;
     public bool ClickThrough { get; init; } = false;
     public bool StartWithWindows { get; init; } = false;
+    public bool ObsCaptureEnabled { get; init; } = false;
+    public int ObsCanvasWidth { get; init; } = 1920;
+    public int ObsCanvasHeight { get; init; } = 1080;
     public string LastMonitorId { get; init; } = string.Empty;
     public double LastX { get; init; } = double.NaN;
     public double LastY { get; init; } = double.NaN;

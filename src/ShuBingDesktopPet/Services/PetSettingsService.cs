@@ -2,13 +2,14 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 using ShuBingDesktopPet.Models;
 
 namespace ShuBingDesktopPet.Services;
 
 public sealed class PetSettingsService
 {
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 6;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -61,6 +62,11 @@ public sealed class PetSettingsService
         }
     }
 
+    public static IReadOnlyList<(int Width, int Height)> GetAllowedResolutions()
+    {
+        return ObsCaptureGeometry.GetAllowedResolutions();
+    }
+
     public void Save(PetSettings settings)
     {
         var normalized = Normalize(settings);
@@ -75,6 +81,7 @@ public sealed class PetSettingsService
     {
         var scale = double.IsFinite(settings.Scale) ? settings.Scale : 1.0;
         scale = Math.Clamp(scale, 0.75, 1.5);
+        var (obsCanvasWidth, obsCanvasHeight) = ObsCaptureGeometry.NormalizeResolution(settings.ObsCanvasWidth, settings.ObsCanvasHeight);
 
         var roamingScope = settings.RoamingScope is RoamingScope.CurrentScreen or RoamingScope.AllScreens
             ? settings.RoamingScope
@@ -102,6 +109,9 @@ public sealed class PetSettingsService
         var walkingBodyStyle = settings.WalkingBodyStyle is WalkingBodyStyle.Current or WalkingBodyStyle.LongBody
             ? settings.WalkingBodyStyle
             : WalkingBodyStyle.Current;
+        var twitchClientId = settings.TwitchClientId?.Trim() ?? string.Empty;
+        if (twitchClientId.Length > 128) twitchClientId = twitchClientId[..128];
+        var twitchMinimumBits = Math.Clamp(settings.TwitchMinimumBits, 1, 1_000_000);
 
         return new PetSettings
         {
@@ -110,6 +120,9 @@ public sealed class PetSettingsService
             RoamingScope = roamingScope,
             Speed = speed,
             Scale = scale,
+            ObsCaptureEnabled = settings.ObsCaptureEnabled,
+            ObsCanvasWidth = obsCanvasWidth,
+            ObsCanvasHeight = obsCanvasHeight,
             ClickThrough = settings.ClickThrough,
             StartWithWindows = settings.StartWithWindows,
             LastMonitorId = monitor,
@@ -120,11 +133,15 @@ public sealed class PetSettingsService
             LastFoodType = lastFoodType,
             FeedingDurationSeconds = feedingDurationSeconds,
             ContinuousWalkDurationSeconds = continuousWalkDurationSeconds,
-            WalkingBodyStyle = walkingBodyStyle
+            WalkingBodyStyle = walkingBodyStyle,
+            TwitchEnabled = settings.TwitchEnabled,
+            TwitchClientId = twitchClientId,
+            TwitchMinimumBits = twitchMinimumBits
         };
     }
 }
 
+/// <summary>Reads the public names current/longBody and falls back safely for unknown values.</summary>
 internal sealed class WalkingBodyStyleJsonConverter : JsonConverter<WalkingBodyStyle>
 {
     public override WalkingBodyStyle Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -137,6 +154,11 @@ internal sealed class WalkingBodyStyleJsonConverter : JsonConverter<WalkingBodyS
                 string.Equals(raw, "long-body", StringComparison.OrdinalIgnoreCase))
             {
                 return WalkingBodyStyle.LongBody;
+            }
+
+            if (string.Equals(raw, "current", StringComparison.OrdinalIgnoreCase))
+            {
+                return WalkingBodyStyle.Current;
             }
 
             return WalkingBodyStyle.Current;

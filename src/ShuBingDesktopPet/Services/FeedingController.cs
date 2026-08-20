@@ -52,7 +52,8 @@ public sealed class FeedingController
 
         _activeFood = food;
         var normalizedDuration = double.IsFinite(durationSeconds) ? durationSeconds : 4.0;
-        _completeDueUtc = nowUtc.AddSeconds(Math.Clamp(normalizedDuration, 1.0, 20.0));
+        var duration = TimeSpan.FromSeconds(Math.Clamp(normalizedDuration, 1.0, 20.0));
+        _completeDueUtc = nowUtc.Add(duration);
         return true;
     }
 

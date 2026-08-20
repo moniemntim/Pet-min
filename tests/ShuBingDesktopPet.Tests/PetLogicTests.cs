@@ -1,5 +1,6 @@
 using System.IO;
 using FluentAssertions;
+using System.Linq;
 using System.Windows;
 using ShuBingDesktopPet.Models;
 using ShuBingDesktopPet.Services;
@@ -96,7 +97,7 @@ public class PetLogicTests
         var service = new PetSettingsService(path);
 
         var loaded = service.LoadOrDefault();
-        loaded.SchemaVersion.Should().Be(4);
+        loaded.SchemaVersion.Should().Be(6);
     }
 
     [Fact]
@@ -121,13 +122,13 @@ public class PetLogicTests
     public void PetSettingsService_InvalidFoodEnumFromJsonFallsBackToDefault()
     {
         var path = Path.GetTempFileName();
-        var text = "{\"SchemaVersion\":3,\"TotalFeedCount\":12,\"LastFoodType\":\"banana\",\"Scale\":1.0,\"RoamingScope\":\"CurrentScreen\",\"Speed\":\"Normal\"}";
+        var text = "{\"SchemaVersion\":4,\"TotalFeedCount\":12,\"LastFoodType\":\"banana\",\"Scale\":1.0,\"RoamingScope\":\"CurrentScreen\",\"Speed\":\"Normal\"}";
         File.WriteAllText(path, text);
 
         var service = new PetSettingsService(path);
         var loaded = service.LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(4);
+        loaded.SchemaVersion.Should().Be(6);
         loaded.TotalFeedCount.Should().Be(12);
         loaded.LastFoodType.Should().Be(PetFoodType.None);
     }
@@ -140,12 +141,113 @@ public class PetLogicTests
 
         var loaded = new PetSettingsService(path).LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(4);
+        loaded.SchemaVersion.Should().Be(6);
         loaded.RoamingEnabled.Should().BeFalse();
         loaded.Scale.Should().Be(1.25);
         loaded.TotalFeedCount.Should().Be(0);
         loaded.LastFedUtc.Should().BeNull();
         loaded.LastFoodType.Should().Be(PetFoodType.None);
+        loaded.ObsCaptureEnabled.Should().BeFalse();
+        loaded.ObsCanvasWidth.Should().Be(1920);
+        loaded.ObsCanvasHeight.Should().Be(1080);
+    }
+
+    [Fact]
+    public void PetSettingsService_OldSchemaThreeGetsObsDefaultsAndUpgrades()
+    {
+        var path = Path.GetTempFileName();
+        File.WriteAllText(path, "{\"SchemaVersion\":3,\"Scale\":0.9,\"ObsCaptureEnabled\":true,\"ObsCanvasWidth\":9999,\"ObsCanvasHeight\":1111}");
+
+        var loaded = new PetSettingsService(path).LoadOrDefault();
+
+        loaded.SchemaVersion.Should().Be(6);
+        loaded.ObsCaptureEnabled.Should().BeTrue();
+        loaded.ObsCanvasWidth.Should().Be(1920);
+        loaded.ObsCanvasHeight.Should().Be(1080);
+        loaded.Scale.Should().Be(0.9);
+    }
+
+    [Fact]
+    public void PetSettingsService_NormalizeAcceptsAllowedObsCanvasResolution()
+    {
+        var path = Path.GetTempFileName();
+        var service = new PetSettingsService(path);
+
+        var normalized = service.Normalize(new PetSettings
+        {
+            ObsCanvasWidth = 2560,
+            ObsCanvasHeight = 1440
+        });
+
+        normalized.ObsCanvasWidth.Should().Be(2560);
+        normalized.ObsCanvasHeight.Should().Be(1440);
+    }
+
+    [Fact]
+    public void PetSettingsService_ObsCaptureFieldsRoundTrip()
+    {
+        var path = Path.GetTempFileName();
+        var service = new PetSettingsService(path);
+
+        service.Save(new PetSettings
+        {
+            ObsCaptureEnabled = true,
+            ObsCanvasWidth = 3840,
+            ObsCanvasHeight = 2160
+        });
+
+        var loaded = service.LoadOrDefault();
+        loaded.SchemaVersion.Should().Be(6);
+        loaded.ObsCaptureEnabled.Should().BeTrue();
+        loaded.ObsCanvasWidth.Should().Be(3840);
+        loaded.ObsCanvasHeight.Should().Be(2160);
+    }
+
+    [Fact]
+    public void PetSettingsService_IllegalObsCanvasResolutionFallsBackTo1920x1080()
+    {
+        var path = Path.GetTempFileName();
+        var service = new PetSettingsService(path);
+
+        var normalized = service.Normalize(new PetSettings
+        {
+            ObsCanvasWidth = 1000,
+            ObsCanvasHeight = 2000
+        });
+
+        normalized.ObsCanvasWidth.Should().Be(1920);
+        normalized.ObsCanvasHeight.Should().Be(1080);
+    }
+
+    [Fact]
+    public void ObsCaptureGeometry_NormalizeResolutionReturnsDefaultForUnknown()
+    {
+        var resolved = ObsCaptureGeometry.NormalizeResolution(800, 600);
+
+        resolved.Should().Be((1920, 1080));
+    }
+
+    [Fact]
+    public void ObsCanvasMotion_TargetWithinSafeBounds()
+    {
+        var random = new Random(1234);
+        var safeBounds = ObsCaptureGeometry.GetSafeBounds(1920, 1080, 192, 208, 12);
+
+        for (var i = 0; i < 200; i++)
+        {
+            var (x, y) = ObsCanvasMotion.ChooseRandomTarget(1920, 1080, 192, 208, 12, random);
+            x.Should().BeInRange(safeBounds.MinX, safeBounds.MaxX);
+            y.Should().BeInRange(safeBounds.MinY, safeBounds.MaxY);
+        }
+    }
+
+    [Fact]
+    public void ObsCaptureGeometry_ClampPetPosition_CannotLeaveCanvas()
+    {
+        var clamped = ObsCaptureGeometry.ClampPetPosition(1920, 1080, 300, 300, 1900, 1020, 12);
+
+        clamped.x.Should().Be(1608);
+        clamped.y.Should().Be(768);
     }
 
     [Fact]
@@ -475,4 +577,5 @@ public class PetLogicTests
         arbiter.TryConsumeWave(now.AddMilliseconds(260)).Should().BeTrue();
         arbiter.HasPendingSingle.Should().BeFalse();
     }
+
 }

@@ -35,13 +35,10 @@ public sealed class WalkingBodyFrameCache
 
     private static void Load(BitmapSource?[] destination, string folder, string resourceFolder, bool allowFallback, Func<string, Stream?> resourceFactory)
     {
-        for (var index = 0; index < FrameCount; index++)
+        for (var i = 0; i < FrameCount; i++)
         {
-            destination[index] = LoadOne(
-                Path.Combine(folder, $"{index:00}.png"),
-                $"{resourceFolder}/{index:00}.png",
-                allowFallback,
-                resourceFactory);
+            var path = Path.Combine(folder, $"{i:00}.png");
+            destination[i] = LoadOne(path, $"{resourceFolder}/{i:00}.png", allowFallback, resourceFactory);
         }
     }
 
@@ -50,11 +47,7 @@ public sealed class WalkingBodyFrameCache
         try
         {
             Stream? stream = File.Exists(filePath) ? File.OpenRead(filePath) : (allowFallback ? resourceFactory(resourcePath) : null);
-            if (stream is null)
-            {
-                return null;
-            }
-
+            if (stream is null) return null;
             using (stream)
             using (var memory = new MemoryStream())
             {
@@ -69,10 +62,7 @@ public sealed class WalkingBodyFrameCache
                 return image;
             }
         }
-        catch
-        {
-            return null;
-        }
+        catch { return null; }
     }
 
     private static Stream? PackResourceStream(string relativePath)
@@ -80,17 +70,10 @@ public sealed class WalkingBodyFrameCache
         try
         {
             var assemblyName = typeof(WalkingBodyFrameCache).Assembly.GetName().Name;
-            if (string.IsNullOrWhiteSpace(assemblyName))
-            {
-                return null;
-            }
-
-            var uri = new Uri($"pack://application:,,,/{assemblyName};component/{relativePath}", UriKind.Absolute);
+            if (string.IsNullOrWhiteSpace(assemblyName)) return null;
+            var uri = new Uri($"pack://application:,,/{assemblyName};component/{relativePath}", UriKind.Absolute);
             return global::System.Windows.Application.GetResourceStream(uri)?.Stream;
         }
-        catch
-        {
-            return null;
-        }
+        catch { return null; }
     }
 }

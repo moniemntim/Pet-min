@@ -5,7 +5,7 @@
         Title="薯餅桌寵設定"
         WindowStartupLocation="CenterScreen"
         Width="360"
-        Height="560"
+        Height="620"
         ResizeMode="NoResize"
         WindowStyle="ToolWindow">
     <ScrollViewer>
@@ -27,7 +27,17 @@
         <TextBlock x:Name="ContinuousWalkDurationLabel" Margin="0,0,0,2" />
         <Slider x:Name="ContinuousWalkDurationSlider" Minimum="2" Maximum="60" SmallChange="1" LargeChange="5" TickFrequency="1" IsSnapToTickEnabled="True" />
         <CheckBox x:Name="ClickThroughBox" Content="滑鼠穿透" Margin="0,8,0,8" />
+        <CheckBox x:Name="ObsCaptureEnabledBox" Content="啟用 OBS 擷取視窗" Margin="0,0,0,8" />
+        <TextBlock Text="OBS 擷取解析度" Margin="0,0,0,4" />
+        <ComboBox x:Name="ObsCaptureResolutionBox" Margin="0,0,0,8" />
         <CheckBox x:Name="StartWithWindowsBox" Content="開機啟動" Margin="0,0,0,8" />
+        <Separator Margin="0,4,0,8" />
+        <TextBlock Text="Twitch Bits 餵食" FontSize="15" FontWeight="SemiBold" />
+        <CheckBox x:Name="TwitchEnabledBox" Content="啟用 Twitch" Margin="0,4,0,4" />
+        <TextBlock Text="Client ID（Public app）" />
+        <TextBox x:Name="TwitchClientIdBox" Margin="0,2,0,6" MaxLength="128" />
+        <TextBlock Text="最低 Bits" />
+        <TextBox x:Name="TwitchMinimumBitsBox" Margin="0,2,0,8" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                 <Button x:Name="SaveButton" Content="儲存" Width="90" Margin="0,0,8,0" />
                 <Button x:Name="CancelButton" Content="取消" Width="90" />

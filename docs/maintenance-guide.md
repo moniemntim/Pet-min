@@ -4,7 +4,7 @@
 
 專案是 .NET 8 WPF Windows 桌面程式：`src/ShuBingDesktopPet/` 放主程式與視窗，`Services/` 放螢幕工作區、漫遊、拖曳、動畫、設定、系統匣、啟動捷徑與原生視窗 API；`Models/` 放設定模型；`tests/ShuBingDesktopPet.Tests/` 放 xUnit 測試；`pet-art/` 保存 81 張照片的目錄、參考圖板、contact sheet 與角色 QA；`tools/` 放可重現資產工具。
 
-主視窗每約 16 ms 執行一次 tick：先更新游標與漫遊，再決定動畫列，最後從啟動時建立的 Frozen 影格快取取出影格。拖曳與反應優先於漫遊，關閉漫遊後仍保留互動。
+主視窗每約 16 ms 執行一次 tick：先更新游標與漫遊，再決定動畫列，最後從啟動時建立的 Frozen 影格快取取出影格。拖曳與反應優先於漫遊，關閉漫遊後仍保留互動。`ObsCaptureWindow` 是獨立透明 16:9 畫布，重用同一份 `SpriteFrameCache`，以 physical-pixel 座標在固定 HWND 內移動 `PetViewbox`；`ObsCaptureGeometry` 與 `ObsCanvasMotion` 提供可測試的解析度、邊界與步進邏輯。
 
 ## 動畫資產
 
@@ -14,7 +14,7 @@
 
 ## 資源生命週期與記憶體
 
-動畫 88 格在啟動時切割為 `CroppedBitmap` 並 `Freeze()`，每次 tick 重用相同物件。關閉時需停止兩個 DispatcherTimer、解除顯示器事件、隱藏並 Dispose `NotifyIcon`、釋放 tray icon 與選單，並關閉設定視窗。開機捷徑使用的 WScript.Shell 與 shortcut COM 物件在 `finally` 釋放。
+動畫 88 格在啟動時切割為 `CroppedBitmap` 並 `Freeze()`，每次 tick 重用相同物件。關閉時需停止主視窗計時器與 OBS 擷取視窗自己的 DispatcherTimer、解除顯示器事件、隱藏並 Dispose `NotifyIcon`、釋放 tray icon 與選單，並關閉設定及 OBS 擷取視窗。開機捷徑使用的 WScript.Shell 與 shortcut COM 物件在 `finally` 釋放。
 
 目前基準取樣：冷啟動 Private Memory 約 130–137 MB；建立設定／右鍵選單後連續兩分鐘約 182–184 MB；GDI 約 57、USER 約 49–50、Handle 約 552–561，沒有持續成長。若改動畫渲染或系統匣資源，必須重做長時間取樣並記錄結果。
 
@@ -39,4 +39,4 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 
 ## 設定格式
 
-設定服務目前 schema version 為 3，新增 `TotalFeedCount`、`LastFedUtc`、`LastFoodType`；schema 2 讀取時餵食欄位使用預設值，保持向後相容。使用 JSON 字串列舉；新增欄位應提供預設值並在 `Normalize` 補正非法值。
+設定服務目前 schema version 為 4，除餵食欄位外新增 `ObsCaptureEnabled`、`ObsCanvasWidth`、`ObsCanvasHeight`；schema 2／3 讀取時 OBS 欄位使用關閉與 1920×1080，保持向後相容。解析度只允許 720p、1080p、1440p、4K 四組，非法組合由 `Normalize` 回復 1920×1080。使用 JSON 字串列舉；新增欄位應提供預設值並在 `Normalize` 補正非法值。
