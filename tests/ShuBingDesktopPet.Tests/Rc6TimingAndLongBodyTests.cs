@@ -172,6 +172,43 @@ public class Rc6TimingAndLongBodyTests
         }
     }
 
+    [Fact]
+    public void LongBodyAssets_HaveBrightStableCoatAcrossAllEightFrames()
+    {
+        var root = FindRepoRoot();
+        var leftFolder = Path.Combine(root, "src", "ShuBingDesktopPet", "Assets", "Walking", "LongBody", "Left");
+        var headLumas = new List<double>();
+        var torsoLumas = new List<double>();
+        var whiteLumas = new List<double>();
+
+        for (var column = 0; column < 8; column++)
+        {
+            var bitmap = LoadBgra32(Path.Combine(leftFolder, $"{column:00}.png"));
+            var pixels = CopyPixels(bitmap);
+            var bbox = AlphaBoundingBox(pixels, bitmap.PixelWidth, bitmap.PixelHeight);
+            bbox.Should().NotBeNull();
+
+            var bounds = bbox!.Value;
+            var head = MeasureRegion(pixels, bitmap.PixelWidth, bounds, x => x < bounds.X + bounds.Width * 0.40, y => y < bounds.Y + bounds.Height * 0.74, IsBrownCoat);
+            var torso = MeasureRegion(pixels, bitmap.PixelWidth, bounds, x => x >= bounds.X + bounds.Width * 0.37, y => y < bounds.Y + bounds.Height * 0.82, IsBrownCoat);
+            var white = MeasureRegion(pixels, bitmap.PixelWidth, bounds, x => true, y => y < bounds.Y + bounds.Height * 0.82, IsWhiteCoat);
+
+            head.Count.Should().BeGreaterThan(30, $"frame {column} must contain enough brown pixels in the head region");
+            torso.Count.Should().BeGreaterThan(30, $"frame {column} must contain enough brown pixels in the torso region");
+            white.Count.Should().BeGreaterThan(30, $"frame {column} must contain enough light coat pixels");
+            headLumas.Add(head.MeanLuma);
+            torsoLumas.Add(torso.MeanLuma);
+            whiteLumas.Add(white.MeanLuma);
+
+            head.MeanLuma.Should().BeGreaterThanOrEqualTo(150, $"frame {column} head coat must not be too dark");
+            head.DarkFraction.Should().BeLessThanOrEqualTo(0.25, $"frame {column} head coat must not contain a dark face mask");
+        }
+
+        (headLumas.Max() - headLumas.Min()).Should().BeLessThanOrEqualTo(8, "head coat must not flash between walking frames");
+        (torsoLumas.Max() - torsoLumas.Min()).Should().BeLessThanOrEqualTo(8, "torso coat must not flash between walking frames");
+        (whiteLumas.Max() - whiteLumas.Min()).Should().BeLessThanOrEqualTo(6, "white coat must not flash between walking frames");
+    }
+
     private static byte[] CopyPixels(BitmapSource source)
     {
         var stride = source.PixelWidth * 4;
@@ -281,4 +318,56 @@ public class Rc6TimingAndLongBodyTests
         converted.Freeze();
         return converted;
     }
+
+    private static CoatStats MeasureRegion(
+        byte[] pixels,
+        int width,
+        Int32Rect bounds,
+        Func<double, bool> xPredicate,
+        Func<double, bool> yPredicate,
+        Func<int, int, int, bool> colorPredicate)
+    {
+        var lumas = new List<double>();
+        var darkCount = 0;
+        for (var y = bounds.Y; y < bounds.Y + bounds.Height; y++)
+        {
+            for (var x = bounds.X; x < bounds.X + bounds.Width; x++)
+            {
+                if (!xPredicate(x) || !yPredicate(y))
+                {
+                    continue;
+                }
+
+                var offset = (y * width + x) * 4;
+                var blue = pixels[offset];
+                var green = pixels[offset + 1];
+                var red = pixels[offset + 2];
+                var alpha = pixels[offset + 3];
+                if (alpha <= 127 || !colorPredicate(red, green, blue))
+                {
+                    continue;
+                }
+
+                var luma = (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+                lumas.Add(luma);
+                if (luma < 130)
+                {
+                    darkCount++;
+                }
+            }
+        }
+
+        return lumas.Count == 0
+            ? new CoatStats(0, 1, 0)
+            : new CoatStats(lumas.Average(), (double)darkCount / lumas.Count, lumas.Count);
+    }
+
+    private static bool IsBrownCoat(int red, int green, int blue) =>
+        red > green + 7 && green > blue + 1 && ((red - blue) / 255.0) > 0.12;
+
+    private static bool IsWhiteCoat(int red, int green, int blue) =>
+        (0.2126 * red) + (0.7152 * green) + (0.0722 * blue) > 182
+        && Math.Max(red, Math.Max(green, blue)) - Math.Min(red, Math.Min(green, blue)) <= 35;
+
+    private readonly record struct CoatStats(double MeanLuma, double DarkFraction, int Count);
 }

@@ -7,7 +7,7 @@ namespace ShuBingDesktopPet.Services;
 
 public sealed class SpriteSheet
 {
-    public BitmapImage? Source { get; init; }
+    public BitmapSource? Source { get; init; }
     public int FrameWidth { get; init; } = 192;
     public int FrameHeight { get; init; } = 208;
     public int Columns { get; init; } = 8;
@@ -94,9 +94,21 @@ public sealed class SpriteSheet
             return null;
         }
 
+        BitmapSource normalized;
+        try
+        {
+            normalized = CoatPaletteNormalizer.Normalize(image);
+        }
+        catch
+        {
+            // A corrupt or unsupported image must not prevent the normal
+            // fallback chain from finding another valid asset.
+            normalized = image;
+        }
+
         return new SpriteSheet
         {
-            Source = image,
+            Source = normalized,
             FrameWidth = 192,
             FrameHeight = 208,
             Columns = 8,

@@ -63,7 +63,7 @@ public sealed class FeedingFrameCache
                 using var memory = new MemoryStream();
                 stream.CopyTo(memory);
                 memory.Position = 0;
-                return CreateBitmap(memory);
+                return NormalizeLoadedFrame(memory);
             }
             catch (IOException)
             {
@@ -101,7 +101,7 @@ public sealed class FeedingFrameCache
             {
                 stream.CopyTo(memory);
                 memory.Position = 0;
-                return CreateBitmap(memory);
+                return NormalizeLoadedFrame(memory);
             }
         }
         catch
@@ -119,6 +119,29 @@ public sealed class FeedingFrameCache
         image.EndInit();
         image.Freeze();
         return image;
+    }
+
+    private static BitmapSource? NormalizeLoadedFrame(Stream source)
+    {
+        var image = CreateBitmap(source);
+        if (image is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            // Feeding frames are independent files (not part of SpriteSheet), so
+            // apply the same one-time coat correction while loading them. The
+            // normalized result is frozen and retained by the per-food cache.
+            return CoatPaletteNormalizer.Normalize(image);
+        }
+        catch
+        {
+            // A malformed/unsupported colour format must not make feeding fail
+            // when the decoded BitmapImage itself is usable.
+            return image;
+        }
     }
 
     private static Stream? PackResourceStream(string relativePath)
