@@ -116,6 +116,27 @@ public partial class MainWindow : Window
                 }
             });
         };
+        _twitchClient.ChannelPointsRewardRedeemed += redemption =>
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!_disposed &&
+                    _settings.TwitchEnabled &&
+                    _settings.TwitchChannelPointsEnabled &&
+                    string.Equals(
+                        redemption.RewardTitle,
+                        _settings.TwitchChannelPointsRewardTitle,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    _twitchFeedQueue.EnqueuePellet();
+                }
+            });
+        };
         _twitchClient.DeviceCodeReady += (uri, code) =>
         {
             if (_disposed)
@@ -446,7 +467,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                await _twitchClient.StartAsync(clientId);
+                await _twitchClient.StartAsync(clientId, _settings.TwitchChannelPointsEnabled);
             }
             catch (Exception ex)
             {
@@ -469,7 +490,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                await _twitchClient.AuthorizeAsync(_settings.TwitchClientId);
+                await _twitchClient.AuthorizeAsync(_settings.TwitchClientId, _settings.TwitchChannelPointsEnabled);
             }
             catch (OperationCanceledException)
             {

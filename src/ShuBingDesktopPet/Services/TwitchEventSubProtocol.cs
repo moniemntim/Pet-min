@@ -4,6 +4,13 @@ namespace ShuBingDesktopPet.Services;
 
 public sealed record TwitchWelcome(string SessionId, string? ReconnectUrl, int KeepaliveTimeoutSeconds = 10);
 public sealed record TwitchCheer(string MessageId, int Bits, string UserName, string Message);
+public sealed record TwitchChannelPointsRedemption(
+    string MessageId,
+    string RewardId,
+    string RewardTitle,
+    int RewardCost,
+    string UserName,
+    string UserInput);
 public sealed record TwitchReconnect(string ReconnectUrl);
 
 public static class TwitchEventSubProtocol
@@ -78,6 +85,55 @@ public static class TwitchEventSubProtocol
                 bits,
                 eventData.TryGetProperty("user_name", out var userName) ? userName.GetString() ?? string.Empty : string.Empty,
                 eventData.TryGetProperty("message", out var message) ? message.GetString() ?? string.Empty : string.Empty);
+            return true;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    public static bool TryParseChannelPointsRedemption(string json, out TwitchChannelPointsRedemption redemption)
+    {
+        redemption = new TwitchChannelPointsRedemption(string.Empty, string.Empty, string.Empty, 0, string.Empty, string.Empty);
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            if (!TryGetMessageType(root, out var messageType) || messageType != "notification")
+            {
+                return false;
+            }
+
+            var metadata = root.GetProperty("metadata");
+            var payload = root.GetProperty("payload");
+            if (payload.GetProperty("subscription").GetProperty("type").GetString() !=
+                "channel.channel_points_custom_reward_redemption.add")
+            {
+                return false;
+            }
+
+            var eventData = payload.GetProperty("event");
+            var reward = eventData.GetProperty("reward");
+            var messageId = metadata.GetProperty("message_id").GetString();
+            var rewardId = reward.GetProperty("id").GetString();
+            var rewardTitle = reward.GetProperty("title").GetString();
+            if (string.IsNullOrWhiteSpace(messageId) ||
+                string.IsNullOrWhiteSpace(rewardId) ||
+                string.IsNullOrWhiteSpace(rewardTitle) ||
+                !reward.GetProperty("cost").TryGetInt32(out var rewardCost) ||
+                rewardCost < 0)
+            {
+                return false;
+            }
+
+            redemption = new TwitchChannelPointsRedemption(
+                messageId,
+                rewardId,
+                rewardTitle,
+                rewardCost,
+                eventData.TryGetProperty("user_name", out var userName) ? userName.GetString() ?? string.Empty : string.Empty,
+                eventData.TryGetProperty("user_input", out var userInput) ? userInput.GetString() ?? string.Empty : string.Empty);
             return true;
         }
         catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException)

@@ -79,10 +79,17 @@ OBS 擷取視窗永遠滑鼠穿透、不置頂且不顯示在工作列；請從�
 
 確認設定中的「開機啟動」已開啟，且可攜版資料夾未被移動；啟動捷徑指向最後一次執行的 EXE。Windows 安全性軟體或公司政策可能阻擋啟動資料夾捷徑。
 
-## Twitch Bits 餵食
+## Twitch Bits／頻道點數餵食
 
 1. 到 [Twitch Developer Console](https://dev.twitch.tv/console) 建立 Application，將 Client Type 設為 Public，複製 Client ID。若 Console 要求 OAuth Redirect URL，可填 `http://localhost`；Device Code 流程不會使用這個回呼網址。
 2. 在薯餅設定視窗啟用 Twitch，貼上 Client ID，設定最低 Bits，儲存後從系統匣選「連線／重新授權 Twitch」。
-3. 應用程式會開啟 Device Code 頁面；用頻道擁有者帳號完成授權。授權範圍只有 `bits:read`，收到頻道 Cheer 便會排入 Pellet 餵食佇列（最多 20 次）。
+3. 應用程式會開啟 Device Code 頁面；用頻道擁有者帳號完成授權。只使用 Bits 時會要求 `bits:read`；收到頻道 Cheer 便會排入 Pellet 餵食佇列（最多 20 次）。
 
-連線使用 Twitch EventSub WebSocket 的 `channel.cheer`。Token 儲存在設定資料夾的 `twitch-auth.json`，Access/Refresh token 以 Windows CurrentUser DPAPI 加密；Client ID、頻道名稱與到期資料也僅供連線恢復使用。中斷/重新授權會清除這份檔案。這個功能不依賴 Streamlabs、綠界或其他外部打賞服務。
+要加入 Twitch 原生頻道點數：
+
+1. 到 Twitch Creator Dashboard 的「Viewer Rewards → Channel Points → Manage Rewards & Challenges」建立自訂獎勵，例如 `餵薯餅吃東西`，自行設定所需點數。
+2. 在薯餅設定勾選「啟用頻道點數餵食」，把「自訂獎勵名稱」填成與 Twitch 完全相同的文字後儲存。
+3. 從系統匣選「連線／重新授權 Twitch」，接受新增的 `channel:read:redemptions` 權限。舊版只有 Bits 權限的 token 必須重新授權。
+4. 觀眾兌換該自訂獎勵時，薯餅會排入一次種子棒餵食；其他獎勵不會觸發。Twitch 必須已對該頻道開放 Channel Points。
+
+連線使用 Twitch EventSub WebSocket 的 `channel.cheer`，啟用頻道點數時也訂閱 `channel.channel_points_custom_reward_redemption.add`。Token 儲存在設定資料夾的 `twitch-auth.json`，Access/Refresh token 以 Windows CurrentUser DPAPI 加密；Client ID、頻道名稱與到期資料也僅供連線恢復使用。中斷/重新授權會清除這份檔案。這個功能不依賴 Streamlabs、綠界或其他外部打賞服務。

@@ -97,7 +97,7 @@ public class PetLogicTests
         var service = new PetSettingsService(path);
 
         var loaded = service.LoadOrDefault();
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class PetLogicTests
         var service = new PetSettingsService(path);
         var loaded = service.LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
         loaded.TotalFeedCount.Should().Be(12);
         loaded.LastFoodType.Should().Be(PetFoodType.None);
     }
@@ -141,7 +141,7 @@ public class PetLogicTests
 
         var loaded = new PetSettingsService(path).LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
         loaded.RoamingEnabled.Should().BeFalse();
         loaded.Scale.Should().Be(1.25);
         loaded.TotalFeedCount.Should().Be(0);
@@ -160,7 +160,7 @@ public class PetLogicTests
 
         var loaded = new PetSettingsService(path).LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
         loaded.ObsCaptureEnabled.Should().BeTrue();
         loaded.ObsCanvasWidth.Should().Be(1920);
         loaded.ObsCanvasHeight.Should().Be(1080);
@@ -197,7 +197,7 @@ public class PetLogicTests
         });
 
         var loaded = service.LoadOrDefault();
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
         loaded.ObsCaptureEnabled.Should().BeTrue();
         loaded.ObsCanvasWidth.Should().Be(3840);
         loaded.ObsCanvasHeight.Should().Be(2160);

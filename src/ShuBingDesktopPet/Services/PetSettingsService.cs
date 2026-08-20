@@ -9,7 +9,7 @@ namespace ShuBingDesktopPet.Services;
 
 public sealed class PetSettingsService
 {
-    private const int CurrentSchemaVersion = 6;
+    private const int CurrentSchemaVersion = 7;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -112,6 +112,12 @@ public sealed class PetSettingsService
         var twitchClientId = settings.TwitchClientId?.Trim() ?? string.Empty;
         if (twitchClientId.Length > 128) twitchClientId = twitchClientId[..128];
         var twitchMinimumBits = Math.Clamp(settings.TwitchMinimumBits, 1, 1_000_000);
+        var twitchRewardTitle = settings.TwitchChannelPointsRewardTitle?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(twitchRewardTitle))
+        {
+            twitchRewardTitle = PetSettings.DefaultTwitchRewardTitle;
+        }
+        if (twitchRewardTitle.Length > 45) twitchRewardTitle = twitchRewardTitle[..45];
 
         return new PetSettings
         {
@@ -136,7 +142,9 @@ public sealed class PetSettingsService
             WalkingBodyStyle = walkingBodyStyle,
             TwitchEnabled = settings.TwitchEnabled,
             TwitchClientId = twitchClientId,
-            TwitchMinimumBits = twitchMinimumBits
+            TwitchMinimumBits = twitchMinimumBits,
+            TwitchChannelPointsEnabled = settings.TwitchChannelPointsEnabled,
+            TwitchChannelPointsRewardTitle = twitchRewardTitle
         };
     }
 }

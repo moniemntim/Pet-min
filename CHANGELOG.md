@@ -8,6 +8,8 @@
 
 ### 新增
 
+- `rc.9`：加入 Twitch 原生頻道點數自訂獎勵餵食；可在設定填入獎勵名稱，程式使用 `channel:read:redemptions` 與 EventSub redemption 事件，只讓名稱相符的獎勵觸發。
+- `rc.9`：Twitch Bits 與頻道點數可並存，設定升級為 schema 7；啟用頻道點數後需重新授權。
 - `rc.8`：加入 Twitch Device Code OAuth 與 EventSub WebSocket `channel.cheer`，達到最低 Bits 門檻後會排入種子棒餵食佇列；支援 token 更新、keepalive、斷線重連、無縫換線與事件去重。
 - `rc.8`：Twitch Access／Refresh token 以 Windows CurrentUser DPAPI 加密另存，非敏感設定升級為 schema 6；設定視窗與系統匣提供啟用、授權、狀態及中斷操作。
 - 獨立「薯餅 OBS 擷取」透明畫布，支援 720p／1080p／1440p／4K；視窗擷取時角色會在固定來源內漫遊，並可從設定或系統匣開關。

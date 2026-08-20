@@ -55,6 +55,8 @@ public partial class PetSettingsWindow : Window
         TwitchEnabledBox.IsChecked = settings.TwitchEnabled;
         TwitchClientIdBox.Text = settings.TwitchClientId;
         TwitchMinimumBitsBox.Text = settings.TwitchMinimumBits.ToString();
+        TwitchChannelPointsEnabledBox.IsChecked = settings.TwitchChannelPointsEnabled;
+        TwitchChannelPointsRewardTitleBox.Text = settings.TwitchChannelPointsRewardTitle;
     }
 
     private void BuildControls()
@@ -91,7 +93,9 @@ public partial class PetSettingsWindow : Window
                 StartWithWindows = StartWithWindowsBox.IsChecked == true,
                 TwitchEnabled = TwitchEnabledBox.IsChecked == true,
                 TwitchClientId = TwitchClientIdBox.Text.Trim(),
-                TwitchMinimumBits = int.TryParse(TwitchMinimumBitsBox.Text, out var bits) ? bits : 1
+                TwitchMinimumBits = int.TryParse(TwitchMinimumBitsBox.Text, out var bits) ? bits : 1,
+                TwitchChannelPointsEnabled = TwitchChannelPointsEnabledBox.IsChecked == true,
+                TwitchChannelPointsRewardTitle = TwitchChannelPointsRewardTitleBox.Text.Trim()
             };
 
             _saveCallback(next);

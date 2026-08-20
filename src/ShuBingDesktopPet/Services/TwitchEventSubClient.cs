@@ -21,7 +21,7 @@ public enum TwitchConnectionState
 
 public sealed record TwitchStatus(TwitchConnectionState State, string Message, string ChannelName);
 
-/// <summary>Twitch Device Code OAuth and EventSub WebSocket client for channel.cheer.</summary>
+/// <summary>Twitch Device Code OAuth and EventSub WebSocket client for cheers and custom reward redemptions.</summary>
 public sealed class TwitchEventSubClient : IAsyncDisposable
 {
     private const string DefaultWebSocketUrl = "wss://eventsub.wss.twitch.tv/ws";
@@ -49,6 +49,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
 
     public event Action<TwitchStatus>? StatusChanged;
     public event Action<TwitchCheer>? CheerReceived;
+    public event Action<TwitchChannelPointsRedemption>? ChannelPointsRewardRedeemed;
     public event Action<string, string>? DeviceCodeReady;
 
     public TwitchEventSubClient(TwitchTokenStore store, HttpClient? http = null)
@@ -58,7 +59,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         _ownsHttpClient = http is null;
     }
 
-    public async Task StartAsync(string clientId, CancellationToken cancellationToken = default)
+    public async Task StartAsync(string clientId, bool enableChannelPoints = false, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         clientId = clientId.Trim();
@@ -83,7 +84,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             TwitchTokenStore.Token token;
             try
             {
-                token = await EnsureValidTokenAsync(storedToken, cancellationToken).ConfigureAwait(false);
+                token = await EnsureValidTokenAsync(storedToken, enableChannelPoints, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or JsonException)
             {
@@ -92,7 +93,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             }
 
             var lifetimeCts = new CancellationTokenSource();
-            var session = await OpenSessionAsync(token, DefaultWebSocketUrl, true, cancellationToken).ConfigureAwait(false);
+            var session = await OpenSessionAsync(token, DefaultWebSocketUrl, true, enableChannelPoints, cancellationToken).ConfigureAwait(false);
             lock (_socketGate)
             {
                 _lifetimeCts = lifetimeCts;
@@ -101,7 +102,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
 
             _channel = token.ChannelName;
             SetState(TwitchConnectionState.Connected, ConnectedMessage());
-            _receiveTask = Task.Run(() => ReceiveLoopAsync(token, session, lifetimeCts.Token), CancellationToken.None);
+            _receiveTask = Task.Run(() => ReceiveLoopAsync(token, session, enableChannelPoints, lifetimeCts.Token), CancellationToken.None);
         }
         finally
         {
@@ -109,7 +110,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
     }
 
-    public async Task AuthorizeAsync(string clientId, CancellationToken cancellationToken = default)
+    public async Task AuthorizeAsync(string clientId, bool enableChannelPoints = false, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         clientId = clientId.Trim();
@@ -126,6 +127,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
         cancellationToken = authorizationCts.Token;
 
+        var scopes = RequiredScopes(enableChannelPoints);
         try
         {
             SetState(TwitchConnectionState.Authorizing, "正在取得 Twitch 授權…");
@@ -134,7 +136,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["client_id"] = clientId,
-                ["scopes"] = "bits:read"
+                ["scopes"] = scopes
             })
         };
         using var deviceResponse = await _http.SendAsync(deviceRequest, cancellationToken).ConfigureAwait(false);
@@ -158,7 +160,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
                 new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["client_id"] = clientId,
-                    ["scopes"] = "bits:read",
+                    ["scopes"] = scopes,
                     ["device_code"] = deviceCode,
                     ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code"
                 }),
@@ -172,7 +174,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
                 var accessToken = GetRequiredString(tokenData, "access_token");
                 var refreshToken = GetRequiredString(tokenData, "refresh_token");
                 var validation = await ValidateAsync(accessToken, cancellationToken).ConfigureAwait(false);
-                ValidateAuthorization(validation, clientId);
+                ValidateAuthorization(validation, clientId, enableChannelPoints);
                 _store.Save(new TwitchTokenStore.Token(
                     accessToken,
                     refreshToken,
@@ -181,7 +183,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
                     validation.UserId,
                     validation.Login));
                 ClearAuthorization(authorizationCts);
-                await StartAsync(clientId, cancellationToken).ConfigureAwait(false);
+                await StartAsync(clientId, enableChannelPoints, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
@@ -240,7 +242,11 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
     }
 
-    private async Task ReceiveLoopAsync(TwitchTokenStore.Token initialToken, WebSocketSession initialSession, CancellationToken cancellationToken)
+    private async Task ReceiveLoopAsync(
+        TwitchTokenStore.Token initialToken,
+        WebSocketSession initialSession,
+        bool enableChannelPoints,
+        CancellationToken cancellationToken)
     {
         var token = initialToken;
         var session = initialSession;
@@ -257,13 +263,20 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
                     CheerReceived?.Invoke(cheer);
                     continue;
                 }
+                if (enableChannelPoints &&
+                    TwitchEventSubProtocol.TryParseChannelPointsRedemption(json, out var redemption) &&
+                    IsNewMessageId(redemption.MessageId))
+                {
+                    ChannelPointsRewardRedeemed?.Invoke(redemption);
+                    continue;
+                }
                 if (!TwitchEventSubProtocol.TryParseReconnect(json, out var reconnect))
                 {
                     continue;
                 }
 
                 SetState(TwitchConnectionState.Reconnecting, "Twitch 正在無縫換線…");
-                var replacement = await OpenSessionAsync(token, reconnect.ReconnectUrl, false, cancellationToken).ConfigureAwait(false);
+                var replacement = await OpenSessionAsync(token, reconnect.ReconnectUrl, false, enableChannelPoints, cancellationToken).ConfigureAwait(false);
                 SwapSocket(replacement.Socket);
                 AbortAndDispose(session.Socket);
                 session = replacement;
@@ -286,8 +299,8 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
                 try
                 {
                     await Task.Delay(RetryDelay(retryAttempt), cancellationToken).ConfigureAwait(false);
-                    token = await EnsureValidTokenAsync(token, cancellationToken).ConfigureAwait(false);
-                    session = await OpenSessionAsync(token, DefaultWebSocketUrl, true, cancellationToken).ConfigureAwait(false);
+                    token = await EnsureValidTokenAsync(token, enableChannelPoints, cancellationToken).ConfigureAwait(false);
+                    session = await OpenSessionAsync(token, DefaultWebSocketUrl, true, enableChannelPoints, cancellationToken).ConfigureAwait(false);
                     SwapSocket(session.Socket);
                     SetState(TwitchConnectionState.Connected, ConnectedMessage());
                 }
@@ -311,7 +324,12 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
     }
 
-    private async Task<WebSocketSession> OpenSessionAsync(TwitchTokenStore.Token token, string url, bool createSubscription, CancellationToken cancellationToken)
+    private async Task<WebSocketSession> OpenSessionAsync(
+        TwitchTokenStore.Token token,
+        string url,
+        bool createSubscription,
+        bool enableChannelPoints,
+        CancellationToken cancellationToken)
     {
         SetState(
             createSubscription ? TwitchConnectionState.Connecting : TwitchConnectionState.Reconnecting,
@@ -329,7 +347,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             }
             if (createSubscription)
             {
-                await SubscribeAsync(token, welcome.SessionId, welcomeCts.Token).ConfigureAwait(false);
+                await SubscribeAsync(token, welcome.SessionId, enableChannelPoints, welcomeCts.Token).ConfigureAwait(false);
             }
             return new WebSocketSession(socket, welcome.KeepaliveTimeoutSeconds);
         }
@@ -345,7 +363,36 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
     }
 
-    private async Task SubscribeAsync(TwitchTokenStore.Token token, string sessionId, CancellationToken cancellationToken)
+    private async Task SubscribeAsync(
+        TwitchTokenStore.Token token,
+        string sessionId,
+        bool enableChannelPoints,
+        CancellationToken cancellationToken)
+    {
+        await CreateSubscriptionAsync(
+            token,
+            sessionId,
+            "channel.cheer",
+            "無法建立 Twitch Cheer 訂閱",
+            cancellationToken).ConfigureAwait(false);
+
+        if (enableChannelPoints)
+        {
+            await CreateSubscriptionAsync(
+                token,
+                sessionId,
+                "channel.channel_points_custom_reward_redemption.add",
+                "無法建立 Twitch 頻道點數訂閱",
+                cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task CreateSubscriptionAsync(
+        TwitchTokenStore.Token token,
+        string sessionId,
+        string subscriptionType,
+        string errorMessage,
+        CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.twitch.tv/helix/eventsub/subscriptions");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
@@ -353,7 +400,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         request.Content = new StringContent(
             JsonSerializer.Serialize(new
             {
-                type = "channel.cheer",
+                type = subscriptionType,
                 version = "1",
                 condition = new { broadcaster_user_id = token.BroadcasterUserId },
                 transport = new { method = "websocket", session_id = sessionId }
@@ -361,20 +408,23 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             Encoding.UTF8,
             "application/json");
         using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        await EnsureSuccessWithMessageAsync(response, "無法建立 Twitch Cheer 訂閱", cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessWithMessageAsync(response, errorMessage, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<TwitchTokenStore.Token> EnsureValidTokenAsync(TwitchTokenStore.Token token, CancellationToken cancellationToken)
+    private async Task<TwitchTokenStore.Token> EnsureValidTokenAsync(
+        TwitchTokenStore.Token token,
+        bool enableChannelPoints,
+        CancellationToken cancellationToken)
     {
         if (token.ExpiresUtc <= DateTime.UtcNow.AddMinutes(5))
         {
-            token = await RefreshAsync(token, cancellationToken).ConfigureAwait(false);
+            token = await RefreshAsync(token, enableChannelPoints, cancellationToken).ConfigureAwait(false);
         }
 
         try
         {
             var validation = await ValidateAsync(token.AccessToken, cancellationToken).ConfigureAwait(false);
-            ValidateAuthorization(validation, token.ClientId);
+            ValidateAuthorization(validation, token.ClientId, enableChannelPoints);
             token = token with
             {
                 ExpiresUtc = DateTime.UtcNow.AddSeconds(validation.ExpiresIn),
@@ -387,14 +437,17 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
-            token = await RefreshAsync(token, cancellationToken).ConfigureAwait(false);
+            token = await RefreshAsync(token, enableChannelPoints, cancellationToken).ConfigureAwait(false);
             _store.Save(token);
             _channel = token.ChannelName;
             return token;
         }
     }
 
-    private async Task<TwitchTokenStore.Token> RefreshAsync(TwitchTokenStore.Token token, CancellationToken cancellationToken)
+    private async Task<TwitchTokenStore.Token> RefreshAsync(
+        TwitchTokenStore.Token token,
+        bool enableChannelPoints,
+        CancellationToken cancellationToken)
     {
         using var response = await _http.PostAsync(
             "https://id.twitch.tv/oauth2/token",
@@ -409,7 +462,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
         var data = document.RootElement;
         var validation = await ValidateAsync(GetRequiredString(data, "access_token"), cancellationToken).ConfigureAwait(false);
-        ValidateAuthorization(validation, token.ClientId);
+        ValidateAuthorization(validation, token.ClientId, enableChannelPoints);
         var refreshed = token with
         {
             AccessToken = GetRequiredString(data, "access_token"),
@@ -441,7 +494,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             scopes);
     }
 
-    private static void ValidateAuthorization(TokenValidation validation, string expectedClientId)
+    private static void ValidateAuthorization(TokenValidation validation, string expectedClientId, bool enableChannelPoints)
     {
         if (!string.Equals(validation.ClientId, expectedClientId, StringComparison.Ordinal))
         {
@@ -451,7 +504,15 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         {
             throw new InvalidOperationException("Twitch token 缺少 bits:read 權限");
         }
+        if (enableChannelPoints && !validation.Scopes.Contains("channel:read:redemptions", StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException("Twitch token 缺少 channel:read:redemptions 權限，請重新授權");
+        }
     }
+
+    private static string RequiredScopes(bool enableChannelPoints) => enableChannelPoints
+        ? "bits:read channel:read:redemptions"
+        : "bits:read";
 
     private async Task<string> ReceiveWithKeepaliveTimeoutAsync(WebSocketSession session, CancellationToken cancellationToken)
     {

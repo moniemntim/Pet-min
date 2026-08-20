@@ -5,7 +5,7 @@
         Title="薯餅桌寵設定"
         WindowStartupLocation="CenterScreen"
         Width="360"
-        Height="620"
+        Height="700"
         ResizeMode="NoResize"
         WindowStyle="ToolWindow">
     <ScrollViewer>
@@ -32,12 +32,16 @@
         <ComboBox x:Name="ObsCaptureResolutionBox" Margin="0,0,0,8" />
         <CheckBox x:Name="StartWithWindowsBox" Content="開機啟動" Margin="0,0,0,8" />
         <Separator Margin="0,4,0,8" />
-        <TextBlock Text="Twitch Bits 餵食" FontSize="15" FontWeight="SemiBold" />
+        <TextBlock Text="Twitch 餵食" FontSize="15" FontWeight="SemiBold" />
         <CheckBox x:Name="TwitchEnabledBox" Content="啟用 Twitch" Margin="0,4,0,4" />
         <TextBlock Text="Client ID（Public app）" />
         <TextBox x:Name="TwitchClientIdBox" Margin="0,2,0,6" MaxLength="128" />
         <TextBlock Text="最低 Bits" />
-        <TextBox x:Name="TwitchMinimumBitsBox" Margin="0,2,0,8" />
+        <TextBox x:Name="TwitchMinimumBitsBox" Margin="0,2,0,6" />
+        <CheckBox x:Name="TwitchChannelPointsEnabledBox" Content="啟用頻道點數餵食" Margin="0,4,0,4" />
+        <TextBlock Text="自訂獎勵名稱（必須完全相同）" />
+        <TextBox x:Name="TwitchChannelPointsRewardTitleBox" Margin="0,2,0,2" MaxLength="45" />
+        <TextBlock Text="啟用後需從系統匣重新授權 Twitch" Foreground="#666666" FontSize="11" Margin="0,0,0,8" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                 <Button x:Name="SaveButton" Content="儲存" Width="90" Margin="0,0,8,0" />
                 <Button x:Name="CancelButton" Content="取消" Width="90" />

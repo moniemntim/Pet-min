@@ -1,6 +1,6 @@
 # 薯餅桌寵
 
-目前版本：`v1.1.0-rc.8` 候選（Twitch Bits／OBS 擷取整合）；`v1.0.0` 為餵食功能前穩定基準。
+目前版本：`v1.1.0-rc.9` 候選（Twitch Bits／頻道點數／OBS 擷取整合）；`v1.0.0` 為餵食功能前穩定基準。
 
 以專案內 81 張薯餅實物照片共同還原的 Windows 10/11 寫實桌面寵物。
 
@@ -15,7 +15,7 @@
 - 右鍵寵物或系統匣選「餵食薯餅」→「種子棒（薯餅實拍）」；動畫直接使用薯餅啃種子棒的原照連拍，餵食時暫停漫遊與其他左鍵互動，完成後顯示「吃飽了！」並開心跳躍，3 秒冷卻。
 - EXE、設定視窗與系統匣使用薯餅正面照片圖示，內含 16–256 px 多尺寸 Windows 圖示。
 - 「所有螢幕」漫遊會先走到目前螢幕邊界，再從目的螢幕對應入口繼續行走，支援螢幕間隙與負座標排列。
-- 設定（含 OBS 擷取與 Twitch 非敏感設定）與最後位置保存於 `%LOCALAPPDATA%\ShuBingDesktopPet\settings.json`，目前 schema 為 `6`，舊設定會自動升級。
+- 設定（含 OBS 擷取與 Twitch 非敏感設定）與最後位置保存於 `%LOCALAPPDATA%\ShuBingDesktopPet\settings.json`，目前 schema 為 `7`，舊設定會自動升級。
 
 ## 使用可攜版
 
@@ -45,6 +45,8 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 
 餵食功能目前以 `v1.1.0` 候選版本維護；`v1.0.0` 保留為加入餵食前可回復的穩定基準。
 
-### Twitch Bits 餵食
+### Twitch Bits／頻道點數餵食
 
-設定視窗可啟用 Twitch，填入 Twitch Developer Console 建立的 Public app Client ID，並設定最低 Bits。按系統匣選單的連線後會開啟 Twitch Device Code 授權頁；授權本人必須是頻道擁有者，並允許 `bits:read`。收到 `channel.cheer` 後會以種子棒餵食薯餅（佇列最多 20 次）。Token 使用 Windows CurrentUser DPAPI 保存於本機，不會顯示在一般設定檔或 UI。
+設定視窗可啟用 Twitch，填入 Twitch Developer Console 建立的 Public app Client ID，並設定最低 Bits。收到 `channel.cheer` 後會以種子棒餵食薯餅（佇列最多 20 次）。
+
+若要使用 Twitch 原生頻道點數，先在 Creator Dashboard 建立自訂獎勵，再勾選「啟用頻道點數餵食」，將獎勵名稱填成完全相同的文字，並從系統匣選「連線／重新授權 Twitch」。程式會額外要求 `channel:read:redemptions`，收到 `channel.channel_points_custom_reward_redemption.add` 且獎勵名稱相符時餵食。頻道點數僅適用於 Twitch 已開放 Channel Points 的頻道。Token 使用 Windows CurrentUser DPAPI 保存於本機，不會顯示在一般設定檔或 UI。

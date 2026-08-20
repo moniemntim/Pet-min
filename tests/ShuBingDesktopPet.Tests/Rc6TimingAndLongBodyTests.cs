@@ -53,7 +53,7 @@ public class Rc6TimingAndLongBodyTests
         json.Should().Contain("\"WalkingBodyStyle\": \"longBody\"");
 
         var loaded = service.LoadOrDefault();
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
         loaded.FeedingDurationSeconds.Should().Be(6.5);
         loaded.ContinuousWalkDurationSeconds.Should().Be(17);
         loaded.WalkingBodyStyle.Should().Be(WalkingBodyStyle.LongBody);
@@ -67,7 +67,7 @@ public class Rc6TimingAndLongBodyTests
 
         var loaded = new PetSettingsService(path).LoadOrDefault();
 
-        loaded.SchemaVersion.Should().Be(6);
+        loaded.SchemaVersion.Should().Be(7);
         loaded.RoamingEnabled.Should().BeFalse();
         loaded.Scale.Should().Be(1.25);
         loaded.WalkingBodyStyle.Should().Be(WalkingBodyStyle.Current);

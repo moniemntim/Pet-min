@@ -2,10 +2,14 @@ namespace ShuBingDesktopPet.Models;
 
 public sealed record PetSettings
 {
-    public int SchemaVersion { get; init; } = 6;
+    public const string DefaultTwitchRewardTitle = "餵薯餅吃東西";
+
+    public int SchemaVersion { get; init; } = 7;
     public bool TwitchEnabled { get; init; } = false;
     public string TwitchClientId { get; init; } = string.Empty;
     public int TwitchMinimumBits { get; init; } = 1;
+    public bool TwitchChannelPointsEnabled { get; init; } = false;
+    public string TwitchChannelPointsRewardTitle { get; init; } = DefaultTwitchRewardTitle;
     public bool RoamingEnabled { get; init; } = true;
     public RoamingScope RoamingScope { get; init; } = RoamingScope.CurrentScreen;
     public RoamingSpeed Speed { get; init; } = RoamingSpeed.Normal;
