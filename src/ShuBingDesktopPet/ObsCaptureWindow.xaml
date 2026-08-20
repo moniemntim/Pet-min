@@ -10,13 +10,14 @@
         AllowsTransparency="True"
         Topmost="False"
         ShowInTaskbar="False"
+        ShowActivated="False"
         Background="Transparent"
         Focusable="False"
         SnapsToDevicePixels="True">
     <Canvas x:Name="CaptureCanvas" Background="Transparent">
         <Viewbox x:Name="PetViewbox" HorizontalAlignment="Left" VerticalAlignment="Top" Stretch="Uniform" StretchDirection="Both">
             <Grid x:Name="PetRenderRoot" Width="192" Height="208" Background="Transparent">
-                <Image x:Name="FrameImage" Width="192" Height="208" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.5,1">
+                <Image x:Name="FrameImage" Width="192" Height="208" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="0.5,1">
                     <Image.RenderTransform>
                         <TransformGroup x:Name="FrameImageTransformGroup">
                             <ScaleTransform x:Name="FrameImageScaleTransform" ScaleX="1" ScaleY="1" />
@@ -24,7 +25,7 @@
                         </TransformGroup>
                     </Image.RenderTransform>
                 </Image>
-                <Canvas x:Name="FallbackCanvas" Width="192" Height="208" IsHitTestVisible="False">
+                <Canvas x:Name="FallbackCanvas" Width="192" Height="208" HorizontalAlignment="Center" IsHitTestVisible="False">
                     <Ellipse x:Name="FallbackBody" Width="110" Height="90" Fill="#FFE3C3A1" Stroke="#B36A3A" StrokeThickness="2"
                              Canvas.Left="41" Canvas.Top="95" />
                     <Ellipse x:Name="FallbackHead" Width="80" Height="70" Fill="#F7D8B0" Stroke="#B36A3A" StrokeThickness="2"

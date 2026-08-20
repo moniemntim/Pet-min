@@ -23,7 +23,12 @@ public partial class ObsCaptureWindow : Window
     private readonly WindowInteropHelper _interop;
     private readonly AnimationSequencer _sequencer = new();
     private readonly SpriteFrameCache? _frameCache;
+    private readonly FeedingFrameCache _feedingFrameCache;
+    private readonly WalkingBodyFrameCache _walkingBodyFrameCache;
     private PetSettings _settings;
+    private PetAction? _reaction;
+    private bool _feedingActive;
+    private PetFoodType _activeFood = PetFoodType.None;
 
     private const double SafeMarginPx = 12.0;
     private const double MinCanvasWidthPx = 1.0;
@@ -50,12 +55,19 @@ public partial class ObsCaptureWindow : Window
     private int _cachedRenderedCol = -1;
     private BitmapSource? _cachedRenderedFrame;
 
-    public ObsCaptureWindow(SpriteSheet sprite, SpriteFrameCache? frameCache, PetSettings settings)
+    public ObsCaptureWindow(
+        SpriteSheet sprite,
+        SpriteFrameCache? frameCache,
+        FeedingFrameCache feedingFrameCache,
+        WalkingBodyFrameCache walkingBodyFrameCache,
+        PetSettings settings)
     {
         InitializeComponent();
 
         _sprite = sprite;
         _frameCache = frameCache;
+        _feedingFrameCache = feedingFrameCache;
+        _walkingBodyFrameCache = walkingBodyFrameCache;
         _interop = new WindowInteropHelper(this);
         _settings = settings;
 
@@ -67,6 +79,7 @@ public partial class ObsCaptureWindow : Window
         }
 
         ApplySettings(_settings);
+        PrepareOffscreenStartupPosition();
 
         SourceInitialized += OnSourceInitialized;
         DpiChanged += OnDpiChanged;
@@ -97,10 +110,20 @@ public partial class ObsCaptureWindow : Window
         if (_isSourceInitialized)
         {
             ApplyCanvasSize();
+            PlaceWindowOffscreen();
             UpdatePhysicalPosition();
             EnsureTickLoop();
         }
     }
+
+    public void ApplyPetState(PetAction? reaction, bool feedingActive, PetFoodType activeFood)
+    {
+        _reaction = reaction;
+        _feedingActive = feedingActive;
+        _activeFood = feedingActive ? activeFood : PetFoodType.None;
+    }
+
+    public void RepositionOffscreen() => PlaceWindowOffscreen();
 
     private void InitializeAnimationRows()
     {
@@ -118,6 +141,7 @@ public partial class ObsCaptureWindow : Window
         ApplyCanvasSize();
         ApplyFrameSize();
         ReinitializePetPosition();
+        PlaceWindowOffscreen();
         UpdatePhysicalPosition();
 
         EnsureTickLoop();
@@ -133,6 +157,7 @@ public partial class ObsCaptureWindow : Window
 
         ApplyCanvasSize();
         ApplyFrameSize();
+        PlaceWindowOffscreen();
         UpdatePhysicalPosition();
     }
 
@@ -169,9 +194,17 @@ public partial class ObsCaptureWindow : Window
 
     private void ApplyFrameSize()
     {
+        var spriteFrameWidth = _sprite.FrameWidth > 0 ? _sprite.FrameWidth : 192;
+        _frameWidth = ObsCaptureGeometry.ResolvePetFrameWidth(
+            spriteFrameWidth,
+            _settings.WalkingBodyStyle,
+            _walkingBodyFrameCache.IsAvailable);
+        _frameHeight = _sprite.FrameHeight > 0 ? _sprite.FrameHeight : 208;
         var clampedScale = _settings.Scale;
         _frameWidthPx = Math.Max(1, (int)Math.Round(_frameWidth * clampedScale));
         _frameHeightPx = Math.Max(1, (int)Math.Round(_frameHeight * clampedScale));
+        PetRenderRoot.Width = _frameWidth;
+        PetRenderRoot.Height = _frameHeight;
         PetViewbox.Width = PxToDipX(_frameWidthPx);
         PetViewbox.Height = PxToDipY(_frameHeightPx);
     }
@@ -218,6 +251,13 @@ public partial class ObsCaptureWindow : Window
 
     private AnimationPlan ResolveAnimationPlan()
     {
+        if (_reaction.HasValue)
+        {
+            return _reaction == PetAction.Feed
+                ? new AnimationPlan(7, Loop: true, IsOneShot: false)
+                : AnimationPlanFactory.CreateRowPlanForAction(_reaction.Value);
+        }
+
         if (_isRoaming)
         {
             return _roamDirection.X >= 0
@@ -231,6 +271,11 @@ public partial class ObsCaptureWindow : Window
     private void UpdateRoaming(double deltaMs)
     {
         if (_frameWidthPx <= 0 || _frameHeightPx <= 0 || _canvasWidthPx <= 0 || _canvasHeightPx <= 0)
+        {
+            return;
+        }
+
+        if (_reaction.HasValue)
         {
             return;
         }
@@ -338,10 +383,24 @@ public partial class ObsCaptureWindow : Window
             return;
         }
 
-        var frame = _frameCache.GetFrame(boundedRow, boundedCol);
+        var feedingFrame = _reaction == PetAction.Feed && _feedingActive
+            ? _feedingFrameCache.GetFrame(_activeFood, boundedCol)
+            : null;
+        var isLongBodyWalk = _walkingBodyFrameCache.IsAvailable &&
+            _settings.WalkingBodyStyle == WalkingBodyStyle.LongBody &&
+            _isRoaming && (boundedRow is 1 or 2);
+        var longBodyFrame = isLongBodyWalk
+            ? _walkingBodyFrameCache.GetFrame(boundedRow == 1, boundedCol)
+            : null;
+        var usingIndependentFrame = feedingFrame is not null || longBodyFrame is not null;
+        BitmapSource? frame = feedingFrame ?? longBodyFrame ?? _frameCache.GetFrame(boundedRow, boundedCol);
         if (frame is not null && (_cachedRenderedRow != boundedRow || _cachedRenderedCol != boundedCol || !ReferenceEquals(_cachedRenderedFrame, frame)))
         {
             FrameImage.Source = frame;
+        }
+        else if (frame is null)
+        {
+            FrameImage.Source = null;
         }
 
         FrameImage.Visibility = Visibility.Visible;
@@ -349,20 +408,59 @@ public partial class ObsCaptureWindow : Window
         _cachedRenderedRow = boundedRow;
         _cachedRenderedCol = boundedCol;
         _cachedRenderedFrame = frame;
+        FrameImage.Width = frame?.PixelWidth ?? _sprite.FrameWidth;
+        FrameImage.Height = frame?.PixelHeight ?? _sprite.FrameHeight;
 
         if (FrameImageScaleTransform is ScaleTransform frameScaleTransform)
         {
-            var scale = AnimationVisualScale.GetFrameScale(boundedRow);
+            var scale = usingIndependentFrame
+                ? new AnimationFrameScale(1, 1)
+                : AnimationVisualScale.GetFrameScale(boundedRow);
             frameScaleTransform.ScaleX = scale.ScaleX;
             frameScaleTransform.ScaleY = scale.ScaleY;
         }
 
         if (FrameImageTranslateTransform is TranslateTransform frameTranslateTransform)
         {
-            var offset = AnimationVisualOffset.GetFrameOffset(boundedRow, boundedCol);
-            frameTranslateTransform.X = offset.TranslateX;
-            frameTranslateTransform.Y = offset.TranslateY;
+            if (usingIndependentFrame)
+            {
+                frameTranslateTransform.X = 0;
+                frameTranslateTransform.Y = 0;
+            }
+            else
+            {
+                var offset = AnimationVisualOffset.GetFrameOffset(boundedRow, boundedCol);
+                frameTranslateTransform.X = offset.TranslateX;
+                frameTranslateTransform.Y = offset.TranslateY;
+            }
         }
+    }
+
+    private void PrepareOffscreenStartupPosition()
+    {
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        Left = SystemParameters.VirtualScreenLeft - Math.Max(Width, _canvasWidthPx) - 64;
+        Top = SystemParameters.VirtualScreenTop;
+    }
+
+    private void PlaceWindowOffscreen()
+    {
+        if (_interop.Handle == IntPtr.Zero || _canvasWidthPx <= 0 || _canvasHeightPx <= 0)
+        {
+            return;
+        }
+
+        var virtualDesktop = System.Windows.Forms.SystemInformation.VirtualScreen;
+        var position = ObsCaptureGeometry.GetOffscreenWindowPosition(
+            virtualDesktop.Left,
+            virtualDesktop.Top,
+            _canvasWidthPx);
+        PetNativeWindow.MoveWindowPx(
+            _interop.Handle,
+            position.x,
+            position.y,
+            _canvasWidthPx,
+            _canvasHeightPx);
     }
 
     private double DpiScaleX => _interop.Handle == IntPtr.Zero ? 1.0 : PetNativeWindow.GetDpiScaleX(_interop.Handle);

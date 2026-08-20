@@ -336,6 +336,7 @@ public partial class MainWindow : Window
 
         ApplyWindowScale(_settings.Scale, applySize: true);
         EnsureInVisibleArea();
+        _obsCaptureWindow?.RepositionOffscreen();
     }
 
     private void OnDpiChanged(object? sender, System.Windows.DpiChangedEventArgs e)
@@ -530,7 +531,12 @@ public partial class MainWindow : Window
     {
         if (_obsCaptureWindow is null)
         {
-            var window = new ObsCaptureWindow(_sprite, _frameCache, _settings);
+            var window = new ObsCaptureWindow(
+                _sprite,
+                _frameCache,
+                _feedingFrameCache,
+                _walkingBodyFrameCache,
+                _settings);
             window.Closed += (_, _) =>
             {
                 if (ReferenceEquals(_obsCaptureWindow, window))
@@ -539,11 +545,13 @@ public partial class MainWindow : Window
                 }
             };
             _obsCaptureWindow = window;
+            SyncObsCaptureState();
             window.Show();
             return;
         }
 
         _obsCaptureWindow.ApplySettings(_settings);
+        SyncObsCaptureState();
     }
 
     private void CloseObsCaptureWindow()
@@ -593,8 +601,17 @@ public partial class MainWindow : Window
             }
         }
 
+        SyncObsCaptureState();
         RenderFrame();
         RenderFeedOverlay(now);
+    }
+
+    private void SyncObsCaptureState()
+    {
+        _obsCaptureWindow?.ApplyPetState(
+            _reaction,
+            _feedingController.IsActive,
+            _feedingController.ActiveFood);
     }
 
     private void CompleteFeeding(DateTime now, PetFoodType completedFood)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows;
+using ShuBingDesktopPet.Models;
 
 namespace ShuBingDesktopPet.Services;
 
@@ -48,5 +49,25 @@ public static class ObsCaptureGeometry
         double safeMarginPx)
     {
         return RoamingBoundary.ClampToVisible(new Rect(0, 0, canvasWidthPx, canvasHeightPx), petWidthPx, petHeightPx, x, y, safeMarginPx);
+    }
+
+    public static int ResolvePetFrameWidth(int spriteFrameWidth, WalkingBodyStyle bodyStyle, bool longBodyFramesAvailable)
+    {
+        var safeSpriteWidth = Math.Max(1, spriteFrameWidth);
+        return bodyStyle == WalkingBodyStyle.LongBody && longBodyFramesAvailable
+            ? WalkingBodyFrameCache.ExpectedFrameWidth
+            : safeSpriteWidth;
+    }
+
+    public static (int x, int y) GetOffscreenWindowPosition(
+        int virtualDesktopLeftPx,
+        int virtualDesktopTopPx,
+        int windowWidthPx,
+        int gapPx = 64)
+    {
+        var safeWidth = Math.Max(1, windowWidthPx);
+        var safeGap = Math.Max(1, gapPx);
+        var offscreenX = (long)virtualDesktopLeftPx - safeWidth - safeGap;
+        return ((int)Math.Clamp(offscreenX, int.MinValue, int.MaxValue), virtualDesktopTopPx);
     }
 }

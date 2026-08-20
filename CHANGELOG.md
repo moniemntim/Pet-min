@@ -8,6 +8,7 @@
 
 ### 新增
 
+- `rc.10`：OBS 擷取同步桌面薯餅的餵食／反應狀態與修長身形走路素材；擷取宿主視窗改放在虛擬桌面外，避免主螢幕出現第二隻薯餅。
 - `rc.9`：加入 Twitch 原生頻道點數自訂獎勵餵食；可在設定填入獎勵名稱，程式使用 `channel:read:redemptions` 與 EventSub redemption 事件，只讓名稱相符的獎勵觸發。
 - `rc.9`：Twitch Bits 與頻道點數可並存，設定升級為 schema 7；啟用頻道點數後需重新授權。
 - `rc.8`：加入 Twitch Device Code OAuth 與 EventSub WebSocket `channel.cheer`，達到最低 Bits 門檻後會排入種子棒餵食佇列；支援 token 更新、keepalive、斷線重連、無縫換線與事件去重。
