@@ -1,6 +1,6 @@
 # 薯餅桌寵
 
-目前版本：`v1.1.0-rc.10` 候選（Twitch Bits／頻道點數／OBS 擷取整合）；`v1.0.0` 為餵食功能前穩定基準。
+目前版本：`v1.1.0` 正式版（Twitch Bits／頻道點數／OBS 擷取整合）；`v1.0.0` 為餵食功能前穩定基準。
 
 以專案內 81 張薯餅實物照片共同還原的 Windows 10/11 寫實桌面寵物。
 
@@ -43,7 +43,7 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 - [版本控制規範](docs/versioning.md)：SemVer、分支、提交與標籤規則。
 - [手動驗收](docs/manual-qa.md) 與 [驗證報告](docs/verification-report.md)：目前的測試與人工檢查紀錄。
 
-餵食功能目前以 `v1.1.0` 候選版本維護；`v1.0.0` 保留為加入餵食前可回復的穩定基準。
+餵食功能自 `v1.1.0` 正式版起提供；`v1.0.0` 保留為加入餵食前可回復的穩定基準。
 
 ### Twitch Bits／頻道點數餵食
 

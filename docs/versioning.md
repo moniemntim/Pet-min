@@ -2,7 +2,7 @@
 
 ## 版本基準
 
-採用 Semantic Versioning 2.0.0：`MAJOR.MINOR.PATCH`。目前餵食功能位於 `agent/feeding-feature`，版本為 `v1.1.0` 候選；`v1.0.0` tag/release 是穩定回復基準。
+採用 Semantic Versioning 2.0.0：`MAJOR.MINOR.PATCH`。目前正式版本是 `main` 上的 `v1.1.0`；`v1.0.0` tag/release 是餵食功能前的穩定回復基準。
 
 - `v1.0.0`：目前餵食功能加入前的穩定基準。
 - `MAJOR`：不相容的設定格式、資產契約或使用方式變更。
@@ -16,7 +16,7 @@
 ## 發佈流程
 
 1. 更新版本號、`CHANGELOG.md`、README 與必要文件。
-2. 執行 Release build、完整自動測試（目前 110 個）及 win-x64 自包含單檔 publish。
+2. 執行 Release build、完整自動測試（目前 170 個）及 win-x64 自包含單檔 publish。
 3. 依 `docs/manual-qa.md` 驗收透明、拖曳、跨螢幕、DPI、設定、圖示與關閉清理。
 4. 記錄 EXE SHA-256、測試數量與已知限制。
 5. 建立對應 tag（例如 `v1.1.0`），再建立 GitHub Release，附上 EXE 與變更摘要。
