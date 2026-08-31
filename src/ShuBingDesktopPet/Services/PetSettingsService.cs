@@ -10,6 +10,7 @@ namespace ShuBingDesktopPet.Services;
 public sealed class PetSettingsService
 {
     private const int CurrentSchemaVersion = 7;
+    private static readonly Encoding Utf8WithoutBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         WriteIndented = true,
@@ -40,24 +41,14 @@ public sealed class PetSettingsService
 
     public PetSettings LoadOrDefault()
     {
-        if (!File.Exists(SettingsPath))
+        lock (_lock)
         {
-            return new PetSettings();
-        }
-
-        try
-        {
-            var text = File.ReadAllText(SettingsPath);
-            var loaded = JsonSerializer.Deserialize<PetSettings>(text, SerializerOptions) ?? new PetSettings();
-            if (loaded.SchemaVersion == 0)
+            if (TryLoad(SettingsPath, out var settings) ||
+                TryLoad(GetBackupPath(), out settings))
             {
-                loaded = loaded with { SchemaVersion = CurrentSchemaVersion };
+                return settings;
             }
 
-            return Normalize(loaded);
-        }
-        catch
-        {
             return new PetSettings();
         }
     }
@@ -73,7 +64,92 @@ public sealed class PetSettingsService
         var text = JsonSerializer.Serialize(normalized, SerializerOptions);
         lock (_lock)
         {
-            File.WriteAllText(SettingsPath, text, Encoding.UTF8);
+            var directory = Path.GetDirectoryName(SettingsPath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var tempPath = Path.Combine(
+                directory ?? string.Empty,
+                $".{Path.GetFileName(SettingsPath)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                using (var stream = new FileStream(
+                    tempPath,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize: 4096,
+                    FileOptions.WriteThrough))
+                using (var writer = new StreamWriter(stream, Utf8WithoutBom, bufferSize: 4096, leaveOpen: true))
+                {
+                    writer.Write(text);
+                    writer.Flush();
+                    stream.Flush(flushToDisk: true);
+                }
+
+                if (File.Exists(SettingsPath))
+                {
+                    File.Replace(tempPath, SettingsPath, GetBackupPath(), ignoreMetadataErrors: true);
+                }
+                else
+                {
+                    File.Move(tempPath, SettingsPath);
+                }
+            }
+            finally
+            {
+                TryDelete(tempPath);
+            }
+        }
+    }
+
+    private bool TryLoad(string path, out PetSettings settings)
+    {
+        settings = new PetSettings();
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            var text = File.ReadAllText(path);
+            var loaded = JsonSerializer.Deserialize<PetSettings>(text, SerializerOptions);
+            if (loaded is null)
+            {
+                return false;
+            }
+
+            if (loaded.SchemaVersion == 0)
+            {
+                loaded = loaded with { SchemaVersion = CurrentSchemaVersion };
+            }
+
+            settings = Normalize(loaded);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private string GetBackupPath() => SettingsPath + ".bak";
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // A failed save must not mask its original exception during best-effort cleanup.
         }
     }
 

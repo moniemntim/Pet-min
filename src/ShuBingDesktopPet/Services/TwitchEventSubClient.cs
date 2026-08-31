@@ -32,16 +32,21 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
     private readonly TwitchTokenStore _store;
     private readonly SemaphoreSlim _lifecycleGate = new(1, 1);
     private readonly object _socketGate = new();
+    private readonly object _stateGate = new();
     private readonly object _messageIdGate = new();
     private readonly HashSet<string> _messageIds = new(StringComparer.Ordinal);
     private readonly Queue<string> _messageIdOrder = new();
+    private readonly Queue<(Action<TwitchStatus>? Handler, TwitchStatus Status)> _statusNotifications = new();
 
     private ClientWebSocket? _socket;
+    private CancellationTokenSource? _startupCts;
     private CancellationTokenSource? _lifetimeCts;
     private CancellationTokenSource? _authorizationCts;
     private Task? _receiveTask;
     private string _channel = string.Empty;
-    private bool _disposed;
+    private volatile bool _disposed;
+    private long _operationVersion;
+    private bool _dispatchingStatus;
 
     public TwitchConnectionState State { get; private set; } = TwitchConnectionState.Disabled;
     public string StatusMessage { get; private set; } = "未啟用";
@@ -65,47 +70,113 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         clientId = clientId.Trim();
         if (string.IsNullOrWhiteSpace(clientId))
         {
-            Stop();
-            SetState(TwitchConnectionState.AuthorizationRequired, "請先設定 Twitch Client ID");
+            var emptyClientVersion = StopCore(updateStatus: false);
+            SetStateIfCurrent(emptyClientVersion, TwitchConnectionState.AuthorizationRequired, "請先設定 Twitch Client ID");
             return;
         }
 
         await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        CancellationTokenSource? startupCts = null;
         try
         {
-            StopCore(updateStatus: false);
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            var operationVersion = StopCore(updateStatus: false);
+            startupCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            lock (_socketGate)
+            {
+                if (Volatile.Read(ref _operationVersion) != operationVersion || _disposed)
+                {
+                    return;
+                }
+
+                _startupCts = startupCts;
+            }
+
+            var startupToken = startupCts.Token;
             var storedToken = _store.Load();
             if (storedToken is null || !string.Equals(storedToken.ClientId, clientId, StringComparison.Ordinal))
             {
-                SetState(TwitchConnectionState.AuthorizationRequired, "需要 Twitch 授權");
+                SetStateIfCurrent(operationVersion, TwitchConnectionState.AuthorizationRequired, "需要 Twitch 授權");
                 return;
             }
 
             TwitchTokenStore.Token token;
             try
             {
-                token = await EnsureValidTokenAsync(storedToken, enableChannelPoints, cancellationToken).ConfigureAwait(false);
+                token = await EnsureValidTokenAsync(storedToken, enableChannelPoints, startupToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or JsonException)
             {
-                SetState(TwitchConnectionState.AuthorizationRequired, "Twitch 授權無效，請重新授權");
+                SetStateIfCurrent(operationVersion, TwitchConnectionState.AuthorizationRequired, "Twitch 授權無效，請重新授權");
                 return;
             }
 
             var lifetimeCts = new CancellationTokenSource();
-            var session = await OpenSessionAsync(token, DefaultWebSocketUrl, true, enableChannelPoints, cancellationToken).ConfigureAwait(false);
-            lock (_socketGate)
+            WebSocketSession? session = null;
+            var activated = false;
+            try
             {
-                _lifetimeCts = lifetimeCts;
-                _socket = session.Socket;
-            }
+                session = await OpenSessionAsync(
+                    token,
+                    DefaultWebSocketUrl,
+                    true,
+                    enableChannelPoints,
+                    operationVersion,
+                    startupToken).ConfigureAwait(false);
 
-            _channel = token.ChannelName;
-            SetState(TwitchConnectionState.Connected, ConnectedMessage());
-            _receiveTask = Task.Run(() => ReceiveLoopAsync(token, session, enableChannelPoints, lifetimeCts.Token), CancellationToken.None);
+                lock (_socketGate)
+                {
+                    if (ReferenceEquals(_startupCts, startupCts) &&
+                        Volatile.Read(ref _operationVersion) == operationVersion &&
+                        !startupToken.IsCancellationRequested &&
+                        !_disposed)
+                    {
+                        _startupCts = null;
+                        _channel = token.ChannelName;
+                        _lifetimeCts = lifetimeCts;
+                        _socket = session.Socket;
+                        _receiveTask = Task.Run(
+                            () => ReceiveLoopAsync(token, session, enableChannelPoints, lifetimeCts, operationVersion),
+                            CancellationToken.None);
+                        activated = true;
+                    }
+                }
+
+                if (!activated)
+                {
+                    return;
+                }
+
+                SetStateIfCurrent(operationVersion, TwitchConnectionState.Connected, ConnectedMessage());
+            }
+            finally
+            {
+                if (!activated)
+                {
+                    lifetimeCts.Dispose();
+                    AbortAndDispose(session?.Socket);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (startupCts?.IsCancellationRequested == true && !cancellationToken.IsCancellationRequested)
+        {
+            // Stop() cancels an in-progress startup; that is a normal lifecycle transition.
         }
         finally
         {
+            if (startupCts is not null)
+            {
+                lock (_socketGate)
+                {
+                    if (ReferenceEquals(_startupCts, startupCts))
+                    {
+                        _startupCts = null;
+                    }
+                }
+
+                startupCts.Dispose();
+            }
+
             _lifecycleGate.Release();
         }
     }
@@ -119,10 +190,15 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             throw new InvalidOperationException("請先設定 Twitch Client ID");
         }
 
-        Stop();
+        var operationVersion = StopCore(updateStatus: false);
         using var authorizationCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         lock (_socketGate)
         {
+            if (Volatile.Read(ref _operationVersion) != operationVersion || _disposed)
+            {
+                return;
+            }
+
             _authorizationCts = authorizationCts;
         }
         cancellationToken = authorizationCts.Token;
@@ -130,79 +206,95 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         var scopes = RequiredScopes(enableChannelPoints);
         try
         {
-            SetState(TwitchConnectionState.Authorizing, "正在取得 Twitch 授權…");
-        using var deviceRequest = new HttpRequestMessage(HttpMethod.Post, "https://id.twitch.tv/oauth2/device")
-        {
-            Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            cancellationToken.ThrowIfCancellationRequested();
+            SetStateIfCurrent(operationVersion, TwitchConnectionState.Authorizing, "正在取得 Twitch 授權…");
+            using var deviceRequest = new HttpRequestMessage(HttpMethod.Post, "https://id.twitch.tv/oauth2/device")
             {
-                ["client_id"] = clientId,
-                ["scopes"] = scopes
-            })
-        };
-        using var deviceResponse = await _http.SendAsync(deviceRequest, cancellationToken).ConfigureAwait(false);
-        await EnsureSuccessWithMessageAsync(deviceResponse, "無法開始 Twitch 授權", cancellationToken).ConfigureAwait(false);
-        using var deviceDocument = JsonDocument.Parse(await deviceResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
-        var device = deviceDocument.RootElement;
-        var deviceCode = GetRequiredString(device, "device_code");
-        var userCode = GetRequiredString(device, "user_code");
-        var verificationUri = GetRequiredString(device, "verification_uri");
-        var intervalSeconds = device.TryGetProperty("interval", out var intervalElement) && intervalElement.TryGetInt32(out var interval)
-            ? Math.Clamp(interval, 1, 60)
-            : 5;
-        var expiresUtc = DateTime.UtcNow.AddSeconds(device.GetProperty("expires_in").GetInt32());
-        DeviceCodeReady?.Invoke(verificationUri, userCode);
-
-        while (DateTime.UtcNow < expiresUtc)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(intervalSeconds), cancellationToken).ConfigureAwait(false);
-            using var pollResponse = await _http.PostAsync(
-                "https://id.twitch.tv/oauth2/token",
-                new FormUrlEncodedContent(new Dictionary<string, string>
+                Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["client_id"] = clientId,
-                    ["scopes"] = scopes,
-                    ["device_code"] = deviceCode,
-                    ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code"
-                }),
-                cancellationToken).ConfigureAwait(false);
-            var responseText = await pollResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-
-            if (pollResponse.IsSuccessStatusCode)
+                    ["scopes"] = scopes
+                })
+            };
+            using var deviceResponse = await _http.SendAsync(deviceRequest, cancellationToken).ConfigureAwait(false);
+            await EnsureSuccessWithMessageAsync(deviceResponse, "無法開始 Twitch 授權", cancellationToken).ConfigureAwait(false);
+            using var deviceDocument = JsonDocument.Parse(await deviceResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+            var device = deviceDocument.RootElement;
+            var deviceCode = GetRequiredString(device, "device_code");
+            var userCode = GetRequiredString(device, "user_code");
+            var verificationUri = GetRequiredString(device, "verification_uri");
+            var intervalSeconds = device.TryGetProperty("interval", out var intervalElement) && intervalElement.TryGetInt32(out var interval)
+                ? Math.Clamp(interval, 1, 60)
+                : 5;
+            var expiresUtc = DateTime.UtcNow.AddSeconds(device.GetProperty("expires_in").GetInt32());
+            cancellationToken.ThrowIfCancellationRequested();
+            if (IsCurrentOperation(operationVersion))
             {
-                using var tokenDocument = JsonDocument.Parse(responseText);
-                var tokenData = tokenDocument.RootElement;
-                var accessToken = GetRequiredString(tokenData, "access_token");
-                var refreshToken = GetRequiredString(tokenData, "refresh_token");
-                var validation = await ValidateAsync(accessToken, cancellationToken).ConfigureAwait(false);
-                ValidateAuthorization(validation, clientId, enableChannelPoints);
-                _store.Save(new TwitchTokenStore.Token(
-                    accessToken,
-                    refreshToken,
-                    clientId,
-                    DateTime.UtcNow.AddSeconds(validation.ExpiresIn),
-                    validation.UserId,
-                    validation.Login));
-                ClearAuthorization(authorizationCts);
-                await StartAsync(clientId, enableChannelPoints, cancellationToken).ConfigureAwait(false);
-                return;
+                DeviceCodeReady?.Invoke(verificationUri, userCode);
             }
 
-            var error = ReadOAuthError(responseText);
-            if (error == "authorization_pending")
+            while (DateTime.UtcNow < expiresUtc)
             {
-                continue;
+                await Task.Delay(TimeSpan.FromSeconds(intervalSeconds), cancellationToken).ConfigureAwait(false);
+                using var pollResponse = await _http.PostAsync(
+                    "https://id.twitch.tv/oauth2/token",
+                    new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        ["client_id"] = clientId,
+                        ["scopes"] = scopes,
+                        ["device_code"] = deviceCode,
+                        ["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code"
+                    }),
+                    cancellationToken).ConfigureAwait(false);
+                var responseText = await pollResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+                if (pollResponse.IsSuccessStatusCode)
+                {
+                    using var tokenDocument = JsonDocument.Parse(responseText);
+                    var tokenData = tokenDocument.RootElement;
+                    var accessToken = GetRequiredString(tokenData, "access_token");
+                    var refreshToken = GetRequiredString(tokenData, "refresh_token");
+                    var validation = await ValidateAsync(accessToken, cancellationToken).ConfigureAwait(false);
+                    ValidateAuthorization(validation, clientId, enableChannelPoints);
+                    var token = new TwitchTokenStore.Token(
+                        accessToken,
+                        refreshToken,
+                        clientId,
+                        DateTime.UtcNow.AddSeconds(validation.ExpiresIn),
+                        validation.UserId,
+                        validation.Login);
+                    lock (_socketGate)
+                    {
+                        if (!ReferenceEquals(_authorizationCts, authorizationCts) ||
+                            Volatile.Read(ref _operationVersion) != operationVersion ||
+                            _disposed)
+                        {
+                            return;
+                        }
+
+                        _store.Save(token);
+                    }
+                    ClearAuthorization(authorizationCts);
+                    await StartAsync(clientId, enableChannelPoints, cancellationToken).ConfigureAwait(false);
+                    return;
+                }
+
+                var error = ReadOAuthError(responseText);
+                if (error == "authorization_pending")
+                {
+                    continue;
+                }
+                if (error == "slow_down")
+                {
+                    intervalSeconds = Math.Min(60, intervalSeconds + 5);
+                    continue;
+                }
+                if (error is "expired_token" or "access_denied")
+                {
+                    throw new InvalidOperationException("Twitch 授權已過期或被拒絕");
+                }
+                throw new InvalidOperationException("Twitch 授權失敗");
             }
-            if (error == "slow_down")
-            {
-                intervalSeconds = Math.Min(60, intervalSeconds + 5);
-                continue;
-            }
-            if (error is "expired_token" or "access_denied")
-            {
-                throw new InvalidOperationException("Twitch 授權已過期或被拒絕");
-            }
-            throw new InvalidOperationException("Twitch 授權失敗");
-        }
 
             throw new TimeoutException("Twitch 授權逾時");
         }
@@ -222,7 +314,7 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
 
         _disposed = true;
-        var receiveTask = _receiveTask;
+        var receiveTask = Volatile.Read(ref _receiveTask);
         StopCore(updateStatus: false);
         if (receiveTask is not null)
         {
@@ -235,6 +327,8 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
             }
         }
 
+        await _lifecycleGate.WaitAsync().ConfigureAwait(false);
+        _lifecycleGate.Release();
         _lifecycleGate.Dispose();
         if (_ownsHttpClient)
         {
@@ -246,81 +340,123 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         TwitchTokenStore.Token initialToken,
         WebSocketSession initialSession,
         bool enableChannelPoints,
-        CancellationToken cancellationToken)
+        CancellationTokenSource lifetimeCts,
+        long operationVersion)
     {
+        var cancellationToken = lifetimeCts.Token;
         var token = initialToken;
         var session = initialSession;
         var retryAttempt = 0;
 
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var json = await ReceiveWithKeepaliveTimeoutAsync(session, cancellationToken).ConfigureAwait(false);
-                retryAttempt = 0;
-                if (TwitchEventSubProtocol.TryParseCheer(json, out var cheer) && IsNewMessageId(cheer.MessageId))
-                {
-                    CheerReceived?.Invoke(cheer);
-                    continue;
-                }
-                if (enableChannelPoints &&
-                    TwitchEventSubProtocol.TryParseChannelPointsRedemption(json, out var redemption) &&
-                    IsNewMessageId(redemption.MessageId))
-                {
-                    ChannelPointsRewardRedeemed?.Invoke(redemption);
-                    continue;
-                }
-                if (!TwitchEventSubProtocol.TryParseReconnect(json, out var reconnect))
-                {
-                    continue;
-                }
-
-                SetState(TwitchConnectionState.Reconnecting, "Twitch 正在無縫換線…");
-                var replacement = await OpenSessionAsync(token, reconnect.ReconnectUrl, false, enableChannelPoints, cancellationToken).ConfigureAwait(false);
-                SwapSocket(replacement.Socket);
-                AbortAndDispose(session.Socket);
-                session = replacement;
-                SetState(TwitchConnectionState.Connected, ConnectedMessage());
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-            catch (Exception ex) when (ex is WebSocketException or TimeoutException or IOException or HttpRequestException)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                AbortAndDispose(session.Socket);
-                SetState(TwitchConnectionState.Reconnecting, "Twitch 連線中斷，正在重試…");
-                retryAttempt++;
                 try
                 {
-                    await Task.Delay(RetryDelay(retryAttempt), cancellationToken).ConfigureAwait(false);
-                    token = await EnsureValidTokenAsync(token, enableChannelPoints, cancellationToken).ConfigureAwait(false);
-                    session = await OpenSessionAsync(token, DefaultWebSocketUrl, true, enableChannelPoints, cancellationToken).ConfigureAwait(false);
-                    SwapSocket(session.Socket);
-                    SetState(TwitchConnectionState.Connected, ConnectedMessage());
+                    var json = await ReceiveWithKeepaliveTimeoutAsync(session, cancellationToken).ConfigureAwait(false);
+                    retryAttempt = 0;
+                    if (TwitchEventSubProtocol.TryParseCheer(json, out var cheer) && IsNewMessageId(cheer.MessageId))
+                    {
+                        CheerReceived?.Invoke(cheer);
+                        continue;
+                    }
+                    if (enableChannelPoints &&
+                        TwitchEventSubProtocol.TryParseChannelPointsRedemption(json, out var redemption) &&
+                        IsNewMessageId(redemption.MessageId))
+                    {
+                        ChannelPointsRewardRedeemed?.Invoke(redemption);
+                        continue;
+                    }
+                    if (!TwitchEventSubProtocol.TryParseReconnect(json, out var reconnect))
+                    {
+                        continue;
+                    }
+
+                    SetStateIfCurrent(operationVersion, TwitchConnectionState.Reconnecting, "Twitch 正在無縫換線…");
+                    var replacement = await OpenSessionAsync(
+                        token,
+                        reconnect.ReconnectUrl,
+                        false,
+                        enableChannelPoints,
+                        operationVersion,
+                        cancellationToken).ConfigureAwait(false);
+                    if (!TrySwapSocket(replacement.Socket, operationVersion))
+                    {
+                        AbortAndDispose(replacement.Socket);
+                        return;
+                    }
+                    AbortAndDispose(session.Socket);
+                    session = replacement;
+                    SetStateIfCurrent(operationVersion, TwitchConnectionState.Connected, ConnectedMessage());
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
-                catch (Exception reconnectException) when (reconnectException is WebSocketException or TimeoutException or IOException or HttpRequestException or InvalidOperationException)
+                catch (Exception ex) when (ex is WebSocketException or TimeoutException or IOException or HttpRequestException)
                 {
-                    SetState(TwitchConnectionState.Reconnecting, "Twitch 重連失敗，稍後再試…");
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    AbortAndDispose(session.Socket);
+                    SetStateIfCurrent(operationVersion, TwitchConnectionState.Reconnecting, "Twitch 連線中斷，正在重試…");
+                    retryAttempt++;
+                    try
+                    {
+                        await Task.Delay(RetryDelay(retryAttempt), cancellationToken).ConfigureAwait(false);
+                        token = await EnsureValidTokenAsync(token, enableChannelPoints, cancellationToken).ConfigureAwait(false);
+                        session = await OpenSessionAsync(
+                            token,
+                            DefaultWebSocketUrl,
+                            true,
+                            enableChannelPoints,
+                            operationVersion,
+                            cancellationToken).ConfigureAwait(false);
+                        if (!TrySwapSocket(session.Socket, operationVersion))
+                        {
+                            AbortAndDispose(session.Socket);
+                            return;
+                        }
+                        SetStateIfCurrent(operationVersion, TwitchConnectionState.Connected, ConnectedMessage());
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    catch (Exception reconnectException) when (reconnectException is WebSocketException or TimeoutException or IOException or HttpRequestException or InvalidOperationException)
+                    {
+                        SetStateIfCurrent(operationVersion, TwitchConnectionState.Reconnecting, "Twitch 重連失敗，稍後再試…");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        SetStateIfCurrent(operationVersion, TwitchConnectionState.Error, "Twitch 連線錯誤：" + ex.Message);
+                    }
+                    return;
                 }
             }
-            catch (Exception ex)
+        }
+        finally
+        {
+            ClientWebSocket? activeSocket = null;
+            lock (_socketGate)
             {
-                if (!cancellationToken.IsCancellationRequested)
+                if (ReferenceEquals(_lifetimeCts, lifetimeCts))
                 {
-                    SetState(TwitchConnectionState.Error, "Twitch 連線錯誤：" + ex.Message);
+                    activeSocket = _socket;
+                    _socket = null;
+                    _lifetimeCts = null;
+                    _receiveTask = null;
                 }
-                return;
             }
+
+            AbortAndDispose(activeSocket);
+            lifetimeCts.Dispose();
         }
     }
 
@@ -329,9 +465,11 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         string url,
         bool createSubscription,
         bool enableChannelPoints,
+        long operationVersion,
         CancellationToken cancellationToken)
     {
-        SetState(
+        SetStateIfCurrent(
+            operationVersion,
             createSubscription ? TwitchConnectionState.Connecting : TwitchConnectionState.Reconnecting,
             createSubscription ? "正在連線 Twitch…" : "Twitch 正在無縫換線…");
         var socket = new ClientWebSocket();
@@ -570,42 +708,49 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
         }
     }
 
-    private void SwapSocket(ClientWebSocket replacement)
+    private bool TrySwapSocket(ClientWebSocket replacement, long operationVersion)
     {
         lock (_socketGate)
         {
+            if (Volatile.Read(ref _operationVersion) != operationVersion || _lifetimeCts is null)
+            {
+                return false;
+            }
+
             _socket = replacement;
+            return true;
         }
     }
 
-    private void StopCore(bool updateStatus)
+    private long StopCore(bool updateStatus)
     {
+        var operationVersion = Interlocked.Increment(ref _operationVersion);
+        CancellationTokenSource? startupCts;
         CancellationTokenSource? lifetimeCts;
         CancellationTokenSource? authorizationCts;
         ClientWebSocket? socket;
         lock (_socketGate)
         {
+            startupCts = _startupCts;
             lifetimeCts = _lifetimeCts;
             authorizationCts = _authorizationCts;
             socket = _socket;
+            _startupCts = null;
             _lifetimeCts = null;
             _authorizationCts = null;
             _socket = null;
         }
-        try
-        {
-            lifetimeCts?.Cancel();
-            authorizationCts?.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+
+        TryCancel(startupCts);
+        TryCancel(lifetimeCts);
+        TryCancel(authorizationCts);
         AbortAndDispose(socket);
-        lifetimeCts?.Dispose();
         if (updateStatus)
         {
-            SetState(TwitchConnectionState.Disabled, "已中斷 Twitch");
+            SetStateIfCurrent(operationVersion, TwitchConnectionState.Disabled, "已中斷 Twitch");
         }
+
+        return operationVersion;
     }
 
     private void ClearAuthorization(CancellationTokenSource authorizationCts)
@@ -621,13 +766,96 @@ public sealed class TwitchEventSubClient : IAsyncDisposable
 
     private void SetState(TwitchConnectionState state, string message)
     {
+        var shouldDispatch = false;
+        lock (_stateGate)
+        {
+            shouldDispatch = EnqueueStateChange(state, message);
+        }
+
+        if (shouldDispatch)
+        {
+            DispatchStatusNotifications();
+        }
+    }
+
+    private void SetStateIfCurrent(long operationVersion, TwitchConnectionState state, string message)
+    {
+        var shouldDispatch = false;
+        lock (_stateGate)
+        {
+            if (Volatile.Read(ref _operationVersion) == operationVersion)
+            {
+                shouldDispatch = EnqueueStateChange(state, message);
+            }
+        }
+
+        if (shouldDispatch)
+        {
+            DispatchStatusNotifications();
+        }
+    }
+
+    private bool IsCurrentOperation(long operationVersion) =>
+        Volatile.Read(ref _operationVersion) == operationVersion;
+
+    private bool EnqueueStateChange(TwitchConnectionState state, string message)
+    {
         State = state;
         StatusMessage = message;
-        StatusChanged?.Invoke(new TwitchStatus(state, message, ChannelName));
+        _statusNotifications.Enqueue((StatusChanged, new TwitchStatus(state, message, ChannelName)));
+        if (_dispatchingStatus)
+        {
+            return false;
+        }
+
+        _dispatchingStatus = true;
+        return true;
+    }
+
+    private void DispatchStatusNotifications()
+    {
+        while (true)
+        {
+            (Action<TwitchStatus>? Handler, TwitchStatus Status) notification;
+            lock (_stateGate)
+            {
+                if (_statusNotifications.Count == 0)
+                {
+                    _dispatchingStatus = false;
+                    return;
+                }
+
+                notification = _statusNotifications.Dequeue();
+            }
+
+            try
+            {
+                notification.Handler?.Invoke(notification.Status);
+            }
+            catch
+            {
+                lock (_stateGate)
+                {
+                    _dispatchingStatus = false;
+                }
+                throw;
+            }
+        }
     }
 
     private string ConnectedMessage() => string.IsNullOrWhiteSpace(_channel) ? "已連線 Twitch" : "已連線 Twitch：" + _channel;
     private static TimeSpan RetryDelay(int attempt) => TimeSpan.FromSeconds(Math.Min(30, Math.Pow(2, Math.Clamp(attempt, 1, 5))));
+
+    private static void TryCancel(CancellationTokenSource? cancellationTokenSource)
+    {
+        try
+        {
+            cancellationTokenSource?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
 
     private static void AbortAndDispose(ClientWebSocket? socket)
     {

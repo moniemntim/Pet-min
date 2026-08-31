@@ -39,4 +39,4 @@ dotnet publish .\src\ShuBingDesktopPet\ShuBingDesktopPet.csproj -c Release -r wi
 
 ## 設定格式
 
-設定服務目前 schema version 為 4，除餵食欄位外新增 `ObsCaptureEnabled`、`ObsCanvasWidth`、`ObsCanvasHeight`；schema 2／3 讀取時 OBS 欄位使用關閉與 1920×1080，保持向後相容。解析度只允許 720p、1080p、1440p、4K 四組，非法組合由 `Normalize` 回復 1920×1080。使用 JSON 字串列舉；新增欄位應提供預設值並在 `Normalize` 補正非法值。
+設定服務目前 schema version 為 7，涵蓋餵食統計、OBS 畫布、動畫時序／身形與 Twitch 非敏感設定；舊 schema 缺少的欄位會使用安全預設值並由 `Normalize` 升級。解析度只允許 720p、1080p、1440p、4K 四組，非法組合回復 1920×1080。設定採同目錄暫存檔完整寫入後原子替換，上一版保留為 `settings.json.bak`，正式檔損壞時會讀取備份。Twitch access／refresh token 另以 CurrentUser DPAPI 保存，不得加入一般設定 JSON。使用 JSON 字串列舉；新增欄位應提供預設值並在 `Normalize` 補正非法值。

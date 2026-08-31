@@ -101,6 +101,56 @@ public class PetLogicTests
     }
 
     [Fact]
+    public void PetSettingsService_CorruptPrimaryRecoversPreviousAtomicBackup()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ShuBingDesktopPet.Tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "settings.json");
+        try
+        {
+            var service = new PetSettingsService(path);
+            service.Save(new PetSettings { Scale = 0.8, TotalFeedCount = 1 });
+            service.Save(new PetSettings { Scale = 1.0, TotalFeedCount = 2 });
+            service.Save(new PetSettings { Scale = 1.2, TotalFeedCount = 3 });
+            File.WriteAllText(path, "{ interrupted-write");
+
+            var recovered = service.LoadOrDefault();
+
+            recovered.Scale.Should().Be(1.0);
+            recovered.TotalFeedCount.Should().Be(2);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void PetSettingsService_AtomicSaveRoundTripsWithoutLeavingTemporaryFiles()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ShuBingDesktopPet.Tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "settings.json");
+        try
+        {
+            var service = new PetSettingsService(path);
+            service.Save(new PetSettings { RoamingEnabled = false, Scale = 1.25 });
+
+            service.LoadOrDefault().Should().Match<PetSettings>(settings =>
+                !settings.RoamingEnabled && settings.Scale == 1.25);
+            Directory.GetFiles(directory, ".settings.json.*.tmp").Should().BeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void PetSettingsService_NormalizeClampFeedCountAndFood()
     {
         var path = Path.GetTempFileName();

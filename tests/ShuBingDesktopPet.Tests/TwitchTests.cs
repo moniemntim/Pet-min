@@ -152,4 +152,173 @@ public sealed class TwitchTests
         queue.Clear();
         queue.Count.Should().Be(0);
     }
+
+    [Fact]
+    public async Task EventSubClient_StopCancelsPendingStartupAndKeepsDisabledState()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ShuBingDesktopPet.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var store = new TwitchTokenStore(directory);
+            store.Save(new TwitchTokenStore.Token(
+                "access-token",
+                "refresh-token",
+                "client-id",
+                DateTime.UtcNow.AddHours(1),
+                "broadcaster-id",
+                "channel"));
+            var handler = new BlockingHttpMessageHandler();
+            using var http = new HttpClient(handler);
+            await using var client = new TwitchEventSubClient(store, http);
+
+            var startTask = client.StartAsync("client-id");
+            await handler.RequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            client.Stop();
+
+            await startTask.WaitAsync(TimeSpan.FromSeconds(2));
+            await handler.CancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            client.State.Should().Be(TwitchConnectionState.Disabled);
+            client.StatusMessage.Should().Be("已中斷 Twitch");
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task EventSubClient_DisposeWaitsForPendingStartupToExit()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ShuBingDesktopPet.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var store = new TwitchTokenStore(directory);
+            store.Save(new TwitchTokenStore.Token(
+                "access-token",
+                "refresh-token",
+                "client-id",
+                DateTime.UtcNow.AddHours(1),
+                "broadcaster-id",
+                "channel"));
+            var handler = new BlockingHttpMessageHandler();
+            using var http = new HttpClient(handler);
+            await using var client = new TwitchEventSubClient(store, http);
+
+            var startTask = client.StartAsync("client-id");
+            await handler.RequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            await client.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(2));
+
+            await startTask.WaitAsync(TimeSpan.FromSeconds(2));
+            await handler.CancellationObserved.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task EventSubClient_StopCancelsAuthorizationWithoutLeavingAuthorizingStatus()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ShuBingDesktopPet.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var handler = new BlockingHttpMessageHandler();
+            using var http = new HttpClient(handler);
+            await using var client = new TwitchEventSubClient(new TwitchTokenStore(directory), http);
+
+            var authorizationTask = client.AuthorizeAsync("client-id");
+            await handler.RequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            client.Stop();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                () => authorizationTask.WaitAsync(TimeSpan.FromSeconds(2)));
+            client.State.Should().Be(TwitchConnectionState.Disabled);
+            client.StatusMessage.Should().Be("已中斷 Twitch");
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task EventSubClient_StatusHandlerCanWaitForStopOnAnotherThread()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ShuBingDesktopPet.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var client = new TwitchEventSubClient(new TwitchTokenStore(directory));
+            using var stopCompleted = new ManualResetEventSlim();
+            client.StatusChanged += status =>
+            {
+                if (status.State != TwitchConnectionState.AuthorizationRequired)
+                {
+                    return;
+                }
+
+                var stopThread = new Thread(() =>
+                {
+                    client.Stop();
+                    stopCompleted.Set();
+                })
+                {
+                    IsBackground = true
+                };
+                stopThread.Start();
+                if (!stopCompleted.Wait(TimeSpan.FromSeconds(2)))
+                {
+                    throw new TimeoutException("StatusChanged was invoked while the client state lock was held.");
+                }
+            };
+
+            await client.StartAsync("client-id").WaitAsync(TimeSpan.FromSeconds(3));
+
+            client.State.Should().Be(TwitchConnectionState.Disabled);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    private sealed class BlockingHttpMessageHandler : HttpMessageHandler
+    {
+        public TaskCompletionSource<bool> RequestStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<bool> CancellationObserved { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            RequestStarted.TrySetResult(true);
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                throw new InvalidOperationException("The blocking test request unexpectedly completed.");
+            }
+            catch (OperationCanceledException)
+            {
+                CancellationObserved.TrySetResult(true);
+                throw;
+            }
+        }
+    }
 }

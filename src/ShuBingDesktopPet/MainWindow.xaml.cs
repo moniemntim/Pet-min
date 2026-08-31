@@ -48,6 +48,9 @@ public partial class MainWindow : Window
     private readonly TwitchTokenStore _twitchTokenStore = new();
     private readonly TwitchEventSubClient _twitchClient;
     private readonly TwitchFeedQueue _twitchFeedQueue = new();
+    private readonly object _twitchOperationGate = new();
+    private CancellationTokenSource? _twitchOperationCts;
+    private long _twitchOperationVersion;
     private ToolStripMenuItem _menuTwitch = null!;
     private ToolStripMenuItem _menuTwitchConnect = null!;
     private ObsCaptureWindow? _obsCaptureWindow;
@@ -85,7 +88,7 @@ public partial class MainWindow : Window
     private int _windowTopPx;
     private System.Drawing.Icon? _trayIconImage;
     private bool _isSourceInitialized;
-    private bool _disposed;
+    private volatile bool _disposed;
     private Screen? _roamMonitor;
     private MonitorArea? _dragStartMonitor;
     private double _roamNoProgressMs;
@@ -103,12 +106,7 @@ public partial class MainWindow : Window
         _twitchClient = new TwitchEventSubClient(_twitchTokenStore);
         _twitchClient.CheerReceived += cheer =>
         {
-            if (_disposed)
-            {
-                return;
-            }
-
-            Dispatcher.BeginInvoke(() =>
+            PostToUiIfAvailable(() =>
             {
                 if (!_disposed && _settings.TwitchEnabled && cheer.Bits >= _settings.TwitchMinimumBits)
                 {
@@ -118,12 +116,7 @@ public partial class MainWindow : Window
         };
         _twitchClient.ChannelPointsRewardRedeemed += redemption =>
         {
-            if (_disposed)
-            {
-                return;
-            }
-
-            Dispatcher.BeginInvoke(() =>
+            PostToUiIfAvailable(() =>
             {
                 if (!_disposed &&
                     _settings.TwitchEnabled &&
@@ -139,12 +132,7 @@ public partial class MainWindow : Window
         };
         _twitchClient.DeviceCodeReady += (uri, code) =>
         {
-            if (_disposed)
-            {
-                return;
-            }
-
-            Dispatcher.BeginInvoke(() =>
+            PostToUiIfAvailable(() =>
             {
                 if (_disposed)
                 {
@@ -164,16 +152,13 @@ public partial class MainWindow : Window
         };
         _twitchClient.StatusChanged += status =>
         {
-            if (!_disposed)
+            PostToUiIfAvailable(() =>
             {
-                Dispatcher.BeginInvoke(() =>
+                if (!_disposed)
                 {
-                    if (!_disposed)
-                    {
-                        UpdateTwitchMenu(status.Message);
-                    }
-                });
-            }
+                    UpdateTwitchMenu(status.Message);
+                }
+            });
         };
         _sprite = SpriteSheet.Load(AppDomain.CurrentDomain.BaseDirectory);
         _interop = new WindowInteropHelper(this);
@@ -454,28 +439,120 @@ public partial class MainWindow : Window
         if (_menuTwitch is not null) _menuTwitch.Text = _settings.TwitchEnabled ? $"Twitch：{message}" : "Twitch：關閉";
     }
 
+    private void PostToUiIfAvailable(Action action)
+    {
+        if (_disposed || Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+        {
+            return;
+        }
+
+        try
+        {
+            _ = Dispatcher.BeginInvoke(() =>
+            {
+                if (!_disposed && !Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
+                {
+                    action();
+                }
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            // The dispatcher can begin shutting down between the checks and BeginInvoke.
+        }
+    }
+
+    private (CancellationTokenSource Source, long Version) BeginTwitchOperation()
+    {
+        var source = new CancellationTokenSource();
+        lock (_twitchOperationGate)
+        {
+            var version = Interlocked.Increment(ref _twitchOperationVersion);
+            var previous = _twitchOperationCts;
+            _twitchOperationCts = source;
+            TryCancel(previous);
+            return (source, version);
+        }
+    }
+
+    private void CancelTwitchOperation()
+    {
+        lock (_twitchOperationGate)
+        {
+            Interlocked.Increment(ref _twitchOperationVersion);
+            var previous = _twitchOperationCts;
+            _twitchOperationCts = null;
+            TryCancel(previous);
+        }
+    }
+
+    private void CompleteTwitchOperation(CancellationTokenSource source)
+    {
+        lock (_twitchOperationGate)
+        {
+            if (ReferenceEquals(_twitchOperationCts, source))
+            {
+                _twitchOperationCts = null;
+            }
+
+            // Cancel() may inline the async continuation that reaches this method.
+            // Leave canceled sources to the GC so they are never disposed mid-callback.
+            if (!source.IsCancellationRequested)
+            {
+                source.Dispose();
+            }
+        }
+    }
+
+    private static void TryCancel(CancellationTokenSource? source)
+    {
+        try
+        {
+            source?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
     private void ApplyTwitchSettings()
     {
         if (!_settings.TwitchEnabled)
         {
+            CancelTwitchOperation();
             _twitchClient.Stop();
             _twitchFeedQueue.Clear();
             return;
         }
 
         var clientId = _settings.TwitchClientId;
+        var enableChannelPoints = _settings.TwitchChannelPointsEnabled;
+        var (operationCts, operationVersion) = BeginTwitchOperation();
         _ = Task.Run(async () =>
         {
             try
             {
-                await _twitchClient.StartAsync(clientId, _settings.TwitchChannelPointsEnabled);
+                await _twitchClient.StartAsync(clientId, enableChannelPoints, operationCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception ex)
             {
-                if (!_disposed)
+                PostToUiIfAvailable(() =>
                 {
-                    _ = Dispatcher.BeginInvoke(() => UpdateTwitchMenu("錯誤：" + ex.Message));
-                }
+                    if (Volatile.Read(ref _twitchOperationVersion) == operationVersion &&
+                        _settings.TwitchEnabled &&
+                        string.Equals(_settings.TwitchClientId, clientId, StringComparison.Ordinal) &&
+                        _settings.TwitchChannelPointsEnabled == enableChannelPoints)
+                    {
+                        UpdateTwitchMenu("錯誤：" + ex.Message);
+                    }
+                });
+            }
+            finally
+            {
+                CompleteTwitchOperation(operationCts);
             }
         });
     }
@@ -487,27 +564,42 @@ public partial class MainWindow : Window
             _trayIcon.ShowBalloonTip(5000, "Twitch", "請先在設定填寫 Client ID 並啟用 Twitch。", ToolTipIcon.Warning);
             return;
         }
+
+        var clientId = _settings.TwitchClientId;
+        var enableChannelPoints = _settings.TwitchChannelPointsEnabled;
+        var (operationCts, operationVersion) = BeginTwitchOperation();
         _ = Task.Run(async () =>
         {
             try
             {
-                await _twitchClient.AuthorizeAsync(_settings.TwitchClientId, _settings.TwitchChannelPointsEnabled);
+                await _twitchClient.AuthorizeAsync(clientId, enableChannelPoints, operationCts.Token);
             }
             catch (OperationCanceledException)
             {
             }
             catch (Exception ex)
             {
-                if (!_disposed)
+                PostToUiIfAvailable(() =>
                 {
-                    _ = Dispatcher.BeginInvoke(() => UpdateTwitchMenu("錯誤：" + ex.Message));
-                }
+                    if (Volatile.Read(ref _twitchOperationVersion) == operationVersion &&
+                        _settings.TwitchEnabled &&
+                        string.Equals(_settings.TwitchClientId, clientId, StringComparison.Ordinal) &&
+                        _settings.TwitchChannelPointsEnabled == enableChannelPoints)
+                    {
+                        UpdateTwitchMenu("錯誤：" + ex.Message);
+                    }
+                });
+            }
+            finally
+            {
+                CompleteTwitchOperation(operationCts);
             }
         });
     }
 
     private void DisconnectTwitch()
     {
+        CancelTwitchOperation();
         _twitchClient.Stop();
         _twitchTokenStore.Clear();
         _twitchFeedQueue.Clear();
@@ -1424,6 +1516,7 @@ public partial class MainWindow : Window
         }
 
         _disposed = true;
+        CancelTwitchOperation();
         _twitchClient.Stop();
         _feedingController.Cancel();
         _feedCelebrationActive = false;
