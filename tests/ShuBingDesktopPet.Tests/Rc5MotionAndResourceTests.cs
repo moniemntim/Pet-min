@@ -6,6 +6,8 @@ using ShuBingDesktopPet.Services;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Resources;
+using System.Security.Cryptography;
 using Xunit;
 
 namespace ShuBingDesktopPet.Tests;
@@ -50,7 +52,7 @@ public class Rc5MotionAndResourceTests
     }
 
     [Fact]
-    public void Atlas_WalkingRightFrames_AreExactHorizontalMirrorsOfWalkingLeftFrames()
+    public void Atlas_WalkingDirections_HaveStableCanvasBaselineAndArea()
     {
         const int frameWidth = 192;
         const int frameHeight = 208;
@@ -62,21 +64,60 @@ public class Rc5MotionAndResourceTests
         var pixels = new byte[stride * bitmap.PixelHeight];
         bitmap.CopyPixels(pixels, stride, 0);
 
+        var leftAreas = new List<int>();
+        var rightAreas = new List<int>();
         for (var column = 0; column < columns; column++)
         {
-            for (var y = 0; y < frameHeight; y++)
-            {
-                for (var x = 0; x < frameWidth; x++)
-                {
-                    var rightOffset = ((frameHeight + y) * stride) + ((column * frameWidth + x) * 4);
-                    var mirroredLeftOffset = (((2 * frameHeight) + y) * stride)
-                        + ((column * frameWidth + (frameWidth - 1 - x)) * 4);
-
-                    pixels.AsSpan(rightOffset, 4).SequenceEqual(pixels.AsSpan(mirroredLeftOffset, 4))
-                        .Should().BeTrue($"walking row 1 frame {column} must mirror row 2 at ({x}, {y})");
-                }
-            }
+            leftAreas.Add(MeasureOpaqueArea(pixels, stride, column * frameWidth, frameHeight, frameWidth, frameHeight));
+            rightAreas.Add(MeasureOpaqueArea(pixels, stride, column * frameWidth, 2 * frameHeight, frameWidth, frameHeight));
+            MeasureBottom(pixels, stride, column * frameWidth, frameHeight, frameWidth, frameHeight)
+                .Should().BeInRange(168, 170);
+            MeasureBottom(pixels, stride, column * frameWidth, 2 * frameHeight, frameWidth, frameHeight)
+                .Should().BeInRange(168, 170);
+            TouchesFrameEdge(pixels, stride, column * frameWidth, frameHeight, frameWidth, frameHeight)
+                .Should().BeFalse();
+            TouchesFrameEdge(pixels, stride, column * frameWidth, 2 * frameHeight, frameWidth, frameHeight)
+                .Should().BeFalse();
         }
+
+        ((leftAreas.Max() - leftAreas.Min()) * 100).Should().BeLessThan(leftAreas.OrderBy(x => x).ElementAt(4) * 12);
+        ((rightAreas.Max() - rightAreas.Min()) * 100).Should().BeLessThan(rightAreas.OrderBy(x => x).ElementAt(4) * 12);
+        leftAreas.Zip(rightAreas).Any(pair => pair.First != pair.Second).Should().BeTrue(
+            "directional resources should retain genuine differences rather than being exact mirrors");
+    }
+
+    private static int MeasureOpaqueArea(byte[] pixels, int stride, int x0, int y0, int width, int height)
+    {
+        var area = 0;
+        for (var y = 0; y < height; y++)
+        for (var x = 0; x < width; x++)
+            if (pixels[(y0 + y) * stride + (x0 + x) * 4 + 3] > 127) area++;
+        return area;
+    }
+
+    private static int MeasureBottom(byte[] pixels, int stride, int x0, int y0, int width, int height)
+    {
+        for (var y = height - 1; y >= 0; y--)
+        for (var x = 0; x < width; x++)
+            if (pixels[(y0 + y) * stride + (x0 + x) * 4 + 3] > 127) return y;
+        return -1;
+    }
+
+    private static bool TouchesFrameEdge(byte[] pixels, int stride, int x0, int y0, int width, int height)
+    {
+        for (var x = 0; x < width; x++)
+        {
+            if (pixels[y0 * stride + (x0 + x) * 4 + 3] > 127
+                || pixels[(y0 + height - 1) * stride + (x0 + x) * 4 + 3] > 127)
+                return true;
+        }
+        for (var y = 1; y < height - 1; y++)
+        {
+            if (pixels[(y0 + y) * stride + x0 * 4 + 3] > 127
+                || pixels[(y0 + y) * stride + (x0 + width - 1) * 4 + 3] > 127)
+                return true;
+        }
+        return false;
     }
 
     [Fact]
@@ -99,6 +140,41 @@ public class Rc5MotionAndResourceTests
             if (Directory.Exists(missingRoot))
             {
                 Directory.Delete(missingRoot, true);
+            }
+        }
+    }
+
+    [Fact]
+    public void EmbeddedFeedingAndLongBodyResources_MatchSourcePngBytes()
+    {
+        var root = FindRepoRoot();
+        using var resourceStream = typeof(FeedingFrameCache).Assembly
+            .GetManifestResourceStream("ShuBingDesktopPet.g.resources");
+        resourceStream.Should().NotBeNull("the compiled resource bundle must be present");
+        using var resources = new ResourceSet(resourceStream!);
+
+        var paths = new List<string>();
+        foreach (var food in new[] { "apple", "carrot", "pellet", "broccoli", "bokchoy" })
+        for (var column = 0; column < 6; column++)
+            paths.Add($"assets/feeding/{food}/{column:00}.png");
+        foreach (var side in new[] { "left", "right" })
+        for (var column = 0; column < 8; column++)
+            paths.Add($"assets/walking/longbody/{side}/{column:00}.png");
+
+        paths.Should().HaveCount(46);
+        foreach (var relative in paths)
+        {
+            var resource = resources.GetObject(relative).Should().BeAssignableTo<Stream>().Subject;
+            using (resource)
+            {
+                using var actual = new MemoryStream();
+                resource.CopyTo(actual);
+                var assetRelative = relative["assets/".Length..];
+                var sourcePath = Path.Combine(root, "src", "ShuBingDesktopPet", "Assets",
+                    assetRelative.Replace('/', Path.DirectorySeparatorChar));
+                File.Exists(sourcePath).Should().BeTrue(sourcePath);
+                Convert.ToHexString(SHA256.HashData(actual.ToArray()))
+                    .Should().Be(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(sourcePath))), relative);
             }
         }
     }

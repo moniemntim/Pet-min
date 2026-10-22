@@ -1,0 +1,803 @@
+{
+  "atlas_rows": [
+    6,
+    8,
+    8,
+    4,
+    5,
+    8,
+    6,
+    6,
+    6,
+    8,
+    8
+  ],
+  "sheets": [
+    {
+      "file": "pet-art/refresh-20261023/generated/idle-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:0:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:0:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:0:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:0:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:0:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 7,
+          "target": "atlas:0:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/walk-right-v2.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:1:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:1:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:1:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:1:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:1:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:1:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 6,
+          "target": "atlas:1:6",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 7,
+          "target": "atlas:1:7",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/walk-left-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:2:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:2:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:2:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:2:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:2:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:2:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 6,
+          "target": "atlas:2:6",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 7,
+          "target": "atlas:2:7",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/wave-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:3:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:3:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:3:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:3:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/jump-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:4:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:4:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:4:2",
+          "baseline": 170,
+          "baseline_offset": -18
+        },
+        {
+          "cell": 3,
+          "target": "atlas:4:3",
+          "baseline": 170,
+          "baseline_offset": -8
+        },
+        {
+          "cell": 4,
+          "target": "atlas:4:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/drag-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:5:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:5:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:5:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:5:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:5:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:5:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 6,
+          "target": "atlas:5:6",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 7,
+          "target": "atlas:5:7",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/petted-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.4005,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:6:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:6:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:6:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:6:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:6:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:6:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/groom-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.405,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:7:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:7:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:7:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:7:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:7:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:7:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/breath-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.414,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:8:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:8:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:8:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:8:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:8:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:8:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/look-a-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.306,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:9:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:9:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:9:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:9:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:9:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:9:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 6,
+          "target": "atlas:9:6",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 7,
+          "target": "atlas:9:7",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/look-b-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.36,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "atlas:10:0",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 1,
+          "target": "atlas:10:1",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 2,
+          "target": "atlas:10:2",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 3,
+          "target": "atlas:10:3",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 4,
+          "target": "atlas:10:4",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 5,
+          "target": "atlas:10:5",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 6,
+          "target": "atlas:10:6",
+          "baseline": 170,
+          "baseline_offset": 0
+        },
+        {
+          "cell": 7,
+          "target": "atlas:10:7",
+          "baseline": 170,
+          "baseline_offset": 0
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/broccoli-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.315,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "feeding:Broccoli:00.png"
+        },
+        {
+          "cell": 1,
+          "target": "feeding:Broccoli:01.png"
+        },
+        {
+          "cell": 2,
+          "target": "feeding:Broccoli:02.png"
+        },
+        {
+          "cell": 3,
+          "target": "feeding:Broccoli:03.png"
+        },
+        {
+          "cell": 4,
+          "target": "feeding:Broccoli:04.png"
+        },
+        {
+          "cell": 5,
+          "target": "feeding:Broccoli:05.png"
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/seed-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.315,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "feeding:Pellet:00.png"
+        },
+        {
+          "cell": 1,
+          "target": "feeding:Pellet:01.png"
+        },
+        {
+          "cell": 2,
+          "target": "feeding:Pellet:02.png"
+        },
+        {
+          "cell": 3,
+          "target": "feeding:Pellet:03.png"
+        },
+        {
+          "cell": 4,
+          "target": "feeding:Pellet:04.png"
+        },
+        {
+          "cell": 5,
+          "target": "feeding:Pellet:05.png"
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/seed-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.315,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "feeding:Apple:00.png"
+        },
+        {
+          "cell": 1,
+          "target": "feeding:Apple:01.png"
+        },
+        {
+          "cell": 2,
+          "target": "feeding:Apple:02.png"
+        },
+        {
+          "cell": 3,
+          "target": "feeding:Apple:03.png"
+        },
+        {
+          "cell": 4,
+          "target": "feeding:Apple:04.png"
+        },
+        {
+          "cell": 5,
+          "target": "feeding:Apple:05.png"
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/seed-final.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.315,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "feeding:Carrot:00.png"
+        },
+        {
+          "cell": 1,
+          "target": "feeding:Carrot:01.png"
+        },
+        {
+          "cell": 2,
+          "target": "feeding:Carrot:02.png"
+        },
+        {
+          "cell": 3,
+          "target": "feeding:Carrot:03.png"
+        },
+        {
+          "cell": 4,
+          "target": "feeding:Carrot:04.png"
+        },
+        {
+          "cell": 5,
+          "target": "feeding:Carrot:05.png"
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/long-left-v2.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.441,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "walking:LongBody:Left:00.png"
+        },
+        {
+          "cell": 1,
+          "target": "walking:LongBody:Left:01.png"
+        },
+        {
+          "cell": 2,
+          "target": "walking:LongBody:Left:02.png"
+        },
+        {
+          "cell": 3,
+          "target": "walking:LongBody:Left:03.png"
+        },
+        {
+          "cell": 4,
+          "target": "walking:LongBody:Left:04.png"
+        },
+        {
+          "cell": 5,
+          "target": "walking:LongBody:Left:05.png"
+        },
+        {
+          "cell": 6,
+          "target": "walking:LongBody:Left:06.png"
+        },
+        {
+          "cell": 7,
+          "target": "walking:LongBody:Left:07.png"
+        }
+      ]
+    },
+    {
+      "file": "pet-art/refresh-20261023/generated/long-right-v2.png",
+      "grid": [
+        4,
+        2
+      ],
+      "extraction": "components",
+      "scale": 0.477,
+      "frames": [
+        {
+          "cell": 0,
+          "target": "walking:LongBody:Right:00.png"
+        },
+        {
+          "cell": 1,
+          "target": "walking:LongBody:Right:01.png"
+        },
+        {
+          "cell": 2,
+          "target": "walking:LongBody:Right:02.png"
+        },
+        {
+          "cell": 3,
+          "target": "walking:LongBody:Right:03.png"
+        },
+        {
+          "cell": 4,
+          "target": "walking:LongBody:Right:04.png"
+        },
+        {
+          "cell": 5,
+          "target": "walking:LongBody:Right:05.png"
+        },
+        {
+          "cell": 6,
+          "target": "walking:LongBody:Right:06.png"
+        },
+        {
+          "cell": 7,
+          "target": "walking:LongBody:Right:07.png"
+        }
+      ]
+    }
+  ],
+  "notes": "One scale per authored sheet, every frame only translated to shared body center and ground y=170. Jump offsets 0,0,-18,-8,0. Source hamster head/anatomy matched across views; seated/extended silhouette dimensions are allowed to vary. Apple/Carrot retain legacy seed-stick aliases."
+}

@@ -45,6 +45,7 @@ public partial class MainWindow : Window
     private ToolStripMenuItem _menuStartWithWindows = null!;
     private ToolStripMenuItem _menuFeed = null!;
     private readonly FeedingController _feedingController = new();
+    private int _feedingFrameColumn;
     private readonly TwitchTokenStore _twitchTokenStore = new();
     private readonly TwitchEventSubClient _twitchClient;
     private readonly TwitchFeedQueue _twitchFeedQueue = new();
@@ -258,9 +259,13 @@ public partial class MainWindow : Window
         });
 
         var settingsItem = new ToolStripMenuItem("設定", null, (_, _) => _settingsWindow.ShowFrom(_settings));
-        var feedPellet = new ToolStripMenuItem("種子棒（薯餅實拍）", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
+        var feedPellet = new ToolStripMenuItem("種子棒", null, (_, _) => TryStartFeeding(PetFoodType.Pellet));
+        var feedBroccoli = new ToolStripMenuItem("花椰菜", null, (_, _) => TryStartFeeding(PetFoodType.Broccoli));
+        var feedBokChoy = new ToolStripMenuItem("小白菜", null, (_, _) => TryStartFeeding(PetFoodType.BokChoy));
         _menuFeed = new ToolStripMenuItem("餵食薯餅");
         _menuFeed.DropDownItems.Add(feedPellet);
+        _menuFeed.DropDownItems.Add(feedBroccoli);
+        _menuFeed.DropDownItems.Add(feedBokChoy);
         _menuTwitch = new ToolStripMenuItem("Twitch：關閉");
         _menuTwitchConnect = new ToolStripMenuItem("連線／重新授權 Twitch", null, (_, _) => ConnectTwitch());
         _menuTwitch.DropDownItems.Add(_menuTwitchConnect);
@@ -282,6 +287,14 @@ public partial class MainWindow : Window
 
         _trayIcon.Text = "薯餅桌寵";
         _trayIcon.ContextMenuStrip = _trayMenu;
+        _trayMenu.Opening += (_, _) =>
+        {
+            var now = DateTime.UtcNow;
+            _menuFeed.Enabled = !_dragging && !_dragCandidate && _reaction is null
+                && !IsFeedingSequenceActive && !_feedingController.IsOnCooldown(now);
+            _menuFeed.Text = IsFeedingSequenceActive ? "薯餅正在享用食物…"
+                : _feedingController.IsOnCooldown(now) ? "薯餅休息一下…" : "餵食薯餅";
+        };
         _trayIcon.Visible = true;
         if (_trayIconImage is not null)
         {
@@ -659,7 +672,8 @@ public partial class MainWindow : Window
 
     private void OnTick(object? sender, EventArgs e)
     {
-        var deltaMs = Math.Max(1.0, _clock.Elapsed.TotalMilliseconds);
+        // Avoid a visible teleport after a blocked dispatcher or system resume.
+        var deltaMs = Math.Clamp(_clock.Elapsed.TotalMilliseconds, 0, 100);
         _clock.Restart();
         var now = DateTime.UtcNow;
         if (_settings.TwitchEnabled)
@@ -693,6 +707,7 @@ public partial class MainWindow : Window
             }
         }
 
+        _feedingFrameColumn = _feedingController.GetAnimationFrame(now);
         SyncObsCaptureState();
         RenderFrame();
         RenderFeedOverlay(now);
@@ -703,7 +718,8 @@ public partial class MainWindow : Window
         _obsCaptureWindow?.ApplyPetState(
             _reaction,
             _feedingController.IsActive,
-            _feedingController.ActiveFood);
+            _feedingController.ActiveFood,
+            _feedingFrameColumn);
     }
 
     private void CompleteFeeding(DateTime now, PetFoodType completedFood)
@@ -717,6 +733,8 @@ public partial class MainWindow : Window
         _settingsService.Save(_settings);
         _feedCelebrationActive = true;
         SetReaction(PetAction.HappyJump);
+        var celebrationPlan = AnimationPlanFactory.CreateRowPlanForAction(PetAction.HappyJump);
+        _sequencer.ApplyPlan(celebrationPlan, _rows[celebrationPlan.Row]);
     }
 
     private AnimationPlan ResolveAnimationPlan()
@@ -801,10 +819,13 @@ public partial class MainWindow : Window
         var contentWidth = usesWideWalkingFrame ? WalkingBodyFrameCache.ExpectedFrameWidth : _sprite.FrameWidth;
         var contentLeft = Math.Max(0, (_frameWidth - contentWidth) * _settings.Scale / 2.0);
         var localFrame = new Rect(contentLeft, 0, contentWidth * _settings.Scale, _frameHeight * _settings.Scale);
+        var renderedRow = _cachedRenderedRow >= 0 ? _cachedRenderedRow : Math.Clamp(_sequencer.Row, 0, _sprite.Rows - 1);
+        var isLongBodyRendered = usesWideWalkingFrame && (renderedRow is 1 or 2);
+        var authoredHeadZone = PetGeometry.GetAuthoredHeadZone(localFrame, renderedRow, isLongBodyRendered);
 
-        if (PetGeometry.IsInHeadZone(localFrame, localCursor))
+        if (authoredHeadZone.Contains(localCursor))
         {
-            var sideRight = localCursor.X >= localFrame.X + localFrame.Width / 2;
+            var sideRight = localCursor.X >= authoredHeadZone.X + authoredHeadZone.Width / 2;
             if (_headZoneReady && _headSideRight != sideRight)
             {
                 _headSweepCount++;
@@ -1158,7 +1179,7 @@ public partial class MainWindow : Window
 
         var isFeedRender = _reaction == PetAction.Feed && _feedingController.IsActive;
         var feedingFrame = isFeedRender
-            ? _feedingFrameCache.GetFrame(_feedingController.ActiveFood, boundedCol)
+            ? _feedingFrameCache.GetFrame(_feedingController.ActiveFood, _feedingFrameColumn)
             : null;
         var usingFeedingFrame = feedingFrame is not null;
         var isLongBodyWalk = _walkingBodyFrameCache.IsAvailable &&
@@ -1217,7 +1238,7 @@ public partial class MainWindow : Window
     {
         var isMessageVisible = _feedingController.IsCompletedMessageVisible(nowUtc);
 
-        if (!isMessageVisible)
+        if (!isMessageVisible && !_feedingController.IsActive)
         {
             FeedOverlay.Visibility = Visibility.Collapsed;
             FeedStatusText.Text = string.Empty;
@@ -1226,8 +1247,20 @@ public partial class MainWindow : Window
 
         FeedOverlay.Visibility = Visibility.Visible;
         FeedStatusText.TextAlignment = TextAlignment.Center;
-        FeedStatusText.Text = "薯餅吃飽了！";
+        FeedStatusText.Text = _feedingController.IsActive
+            ? $"薯餅正在吃{GetFoodDisplayName(_feedingController.ActiveFood)}…"
+            : "薯餅吃飽了！";
     }
+
+    private static string GetFoodDisplayName(PetFoodType food) => food switch
+    {
+        PetFoodType.Apple => "蘋果",
+        PetFoodType.Carrot => "紅蘿蔔",
+        PetFoodType.Pellet => "種子棒",
+        PetFoodType.Broccoli => "花椰菜",
+        PetFoodType.BokChoy => "小白菜",
+        _ => "食物"
+    };
 
     private void RestoreStartupPosition()
     {

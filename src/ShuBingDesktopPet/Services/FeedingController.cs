@@ -11,6 +11,8 @@ public sealed class FeedingController
 
     private PetFoodType _activeFood = PetFoodType.None;
     private DateTime? _completeDueUtc;
+    private DateTime _startedUtc;
+    private double _durationSeconds;
     private DateTime _nextAllowedUtc = DateTime.MinValue;
     private DateTime? _completedMessageUntilUtc;
 
@@ -18,6 +20,10 @@ public sealed class FeedingController
     public PetFoodType ActiveFood => _activeFood;
     public DateTime NextAllowedUtc => _nextAllowedUtc;
     public DateTime? CompleteDueUtc => _completeDueUtc;
+
+    public int GetAnimationFrame(DateTime nowUtc) => IsActive
+        ? FeedingAnimationTimeline.GetFrame((nowUtc - _startedUtc).TotalSeconds, _durationSeconds)
+        : 0;
 
     public bool IsCompletedMessageVisible(DateTime nowUtc)
     {
@@ -40,7 +46,7 @@ public sealed class FeedingController
 
     public bool TryStart(PetFoodType food, DateTime nowUtc, bool isBusy, double durationSeconds)
     {
-        if (food is not (PetFoodType.Apple or PetFoodType.Carrot or PetFoodType.Pellet))
+        if (food is not (PetFoodType.Apple or PetFoodType.Carrot or PetFoodType.Pellet or PetFoodType.Broccoli or PetFoodType.BokChoy))
         {
             return false;
         }
@@ -53,6 +59,9 @@ public sealed class FeedingController
         _activeFood = food;
         var normalizedDuration = double.IsFinite(durationSeconds) ? durationSeconds : 4.0;
         var duration = TimeSpan.FromSeconds(Math.Clamp(normalizedDuration, 1.0, 20.0));
+        _startedUtc = nowUtc;
+        _durationSeconds = duration.TotalSeconds;
+        _completedMessageUntilUtc = null;
         _completeDueUtc = nowUtc.Add(duration);
         return true;
     }

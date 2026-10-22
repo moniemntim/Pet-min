@@ -17,7 +17,7 @@ public class FeedingFrameCacheTests
     {
         var cache = new FeedingFrameCache(AppContext.BaseDirectory);
 
-        foreach (var food in new[] { PetFoodType.Apple, PetFoodType.Carrot, PetFoodType.Pellet })
+        foreach (var food in new[] { PetFoodType.Apple, PetFoodType.Carrot, PetFoodType.Pellet, PetFoodType.Broccoli, PetFoodType.BokChoy })
         {
             for (var column = 0; column < 6; column++)
             {
@@ -26,6 +26,56 @@ public class FeedingFrameCacheTests
                 frame!.PixelWidth.Should().Be(192);
                 frame.PixelHeight.Should().Be(208);
                 frame.IsFrozen.Should().BeTrue();
+            }
+        }
+    }
+
+    [Fact]
+    public void FeedingFrameCache_BroccoliFramesHaveGreenFoodPixelsAndDistinctFrames()
+    {
+        var cache = new FeedingFrameCache(AppContext.BaseDirectory);
+        var frames = Enumerable.Range(0, 6).Select(i => cache.GetFrame(PetFoodType.Broccoli, i)).ToArray();
+        frames.Should().OnlyContain(frame => frame != null);
+        frames.Should().OnlyContain(frame => frame!.IsFrozen);
+        frames.Distinct(ReferenceEqualityComparer.Instance).Should().HaveCount(6);
+
+        foreach (var frame in frames)
+        {
+            var greenPixels = 0;
+            var bitmap = new FormatConvertedBitmap(frame!, PixelFormats.Bgra32, null, 0);
+            var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4];
+            bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0);
+            for (var i = 0; i < pixels.Length; i += 4)
+            {
+                var b = pixels[i];
+                var g = pixels[i + 1];
+                var r = pixels[i + 2];
+                if (pixels[i + 3] > 200 && g > r + 15 && g > b + 10)
+                {
+                    greenPixels++;
+                }
+            }
+            greenPixels.Should().BeGreaterThan(20, "each frame should retain visible green broccoli after coat normalization");
+        }
+    }
+
+    [Fact]
+    public void FeedingFrameCache_BokChoyFramesHaveNoLargeDetachedAlphaArtifacts()
+    {
+        var root = FindAssetRoot();
+        var cache = new FeedingFrameCache(root);
+        for (var column = 0; column < 6; column++)
+        {
+            var frame = cache.GetFrame(PetFoodType.BokChoy, column);
+            frame.Should().NotBeNull();
+            var pixels = CopyPixels(frame!);
+            var components = AlphaComponents(pixels, frame!.PixelWidth, frame.PixelHeight, 127);
+            components.Should().NotBeEmpty();
+            if (components.Count > 1)
+            {
+                components.OrderByDescending(x => x).Skip(1).Should().OnlyContain(
+                    size => size <= 8,
+                    $"BokChoy frame {column} should not contain a large detached assembly artifact");
             }
         }
     }
@@ -133,5 +183,52 @@ public class FeedingFrameCacheTests
 
         using var stream = File.Create(path);
         encoder.Save(stream);
+    }
+
+    private static byte[] CopyPixels(BitmapSource source)
+    {
+        var pixels = new byte[source.PixelWidth * source.PixelHeight * 4];
+        source.CopyPixels(pixels, source.PixelWidth * 4, 0);
+        return pixels;
+    }
+
+    private static List<int> AlphaComponents(byte[] pixels, int width, int height, byte threshold)
+    {
+        var seen = new bool[width * height];
+        var components = new List<int>();
+        for (var y = 0; y < height; y++)
+        for (var x = 0; x < width; x++)
+        {
+            var start = y * width + x;
+            if (seen[start] || pixels[start * 4 + 3] <= threshold) continue;
+            var pending = new Stack<int>();
+            pending.Push(start); seen[start] = true;
+            var count = 0;
+            while (pending.Count > 0)
+            {
+                var index = pending.Pop(); count++;
+                var px = index % width; var py = index / width;
+                foreach (var neighbor in new[] { (px - 1, py), (px + 1, py), (px, py - 1), (px, py + 1) })
+                {
+                    if (neighbor.Item1 < 0 || neighbor.Item1 >= width || neighbor.Item2 < 0 || neighbor.Item2 >= height) continue;
+                    var next = neighbor.Item2 * width + neighbor.Item1;
+                    if (!seen[next] && pixels[next * 4 + 3] > threshold) { seen[next] = true; pending.Push(next); }
+                }
+            }
+            components.Add(count);
+        }
+        return components;
+    }
+
+    private static string FindAssetRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var root = Path.Combine(directory.FullName, "src", "ShuBingDesktopPet");
+            if (File.Exists(Path.Combine(root, "Assets", "Feeding", "BokChoy", "00.png"))) return root;
+            directory = directory.Parent;
+        }
+        throw new DirectoryNotFoundException("Could not locate feeding asset root.");
     }
 }

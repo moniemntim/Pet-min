@@ -300,8 +300,11 @@ public class PetLogicTests
         clamped.y.Should().Be(768);
     }
 
-    [Fact]
-    public void PetSettingsService_FeedFieldsRoundTripAsUtcAndCamelCaseEnum()
+    [Theory]
+    [InlineData(PetFoodType.Carrot, "carrot")]
+    [InlineData(PetFoodType.Broccoli, "broccoli")]
+    [InlineData(PetFoodType.BokChoy, "bokChoy")]
+    public void PetSettingsService_FeedFieldsRoundTripAsUtcAndCamelCaseEnum(PetFoodType food, string serialized)
     {
         var path = Path.GetTempFileName();
         var service = new PetSettingsService(path);
@@ -311,16 +314,16 @@ public class PetLogicTests
         {
             TotalFeedCount = 7,
             LastFedUtc = fedAt,
-            LastFoodType = PetFoodType.Carrot
+            LastFoodType = food
         });
 
         var json = File.ReadAllText(path);
-        json.Should().Contain("\"LastFoodType\": \"carrot\"");
+        json.Should().Contain($"\"LastFoodType\": \"{serialized}\"");
         var loaded = service.LoadOrDefault();
         loaded.TotalFeedCount.Should().Be(7);
         loaded.LastFedUtc.Should().Be(fedAt);
         loaded.LastFedUtc!.Value.Kind.Should().Be(DateTimeKind.Utc);
-        loaded.LastFoodType.Should().Be(PetFoodType.Carrot);
+        loaded.LastFoodType.Should().Be(food);
     }
 
     [Theory]
@@ -541,40 +544,37 @@ public class PetLogicTests
     }
 
     [Fact]
-    public void AnimationVisualScale_RowSixScalesToZeroPointSixNine()
+    public void AnimationVisualScale_RowSixKeepsSharedScale()
     {
         var scale = AnimationVisualScale.GetFrameScale(6);
-        scale.ScaleX.Should().Be(0.69);
-        scale.ScaleY.Should().Be(0.69);
+        scale.ScaleX.Should().Be(1.0);
+        scale.ScaleY.Should().Be(1.0);
     }
 
     [Fact]
-    public void AnimationVisualScale_RowSevenScalesUniformlyToZeroPointSix()
+    public void AnimationVisualScale_RowSevenKeepsSharedScale()
     {
         var scale = AnimationVisualScale.GetFrameScale(7);
-        scale.ScaleX.Should().Be(0.60);
-        scale.ScaleY.Should().Be(0.60);
+        scale.ScaleX.Should().Be(1.0);
+        scale.ScaleY.Should().Be(1.0);
     }
 
     [Fact]
-    public void AnimationVisualScale_RowTenIsOnePointSeventeen()
+    public void AnimationVisualScale_RowTenKeepsSharedScale()
     {
         var scale = AnimationVisualScale.GetFrameScale(10);
-        scale.ScaleX.Should().Be(1.17);
-        scale.ScaleY.Should().Be(1.17);
+        scale.ScaleX.Should().Be(1.0);
+        scale.ScaleY.Should().Be(1.0);
     }
 
     [Fact]
-    public void AnimationVisualOffset_RowSevenYOffset()
+    public void AnimationVisualOffset_RowSevenUsesSharedBaseline()
     {
-        var bottomAfterScale = new[] { 203.8, 205.0, 205.0, 203.8, 197.8, 205.0 };
-        var expectedBaselineY = 169.0;
-
-        for (var col = 0; col < bottomAfterScale.Length; col++)
+        for (var col = 0; col < 6; col++)
         {
             var offset = AnimationVisualOffset.GetFrameOffset(7, col);
             offset.TranslateX.Should().Be(0);
-            (bottomAfterScale[col] + offset.TranslateY).Should().BeApproximately(expectedBaselineY, 0.01);
+            offset.TranslateY.Should().Be(0);
         }
     }
 

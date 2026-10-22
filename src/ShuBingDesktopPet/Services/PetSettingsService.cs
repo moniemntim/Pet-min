@@ -174,7 +174,7 @@ public sealed class PetSettingsService
         var totalFeedCount = Math.Max(0, settings.TotalFeedCount);
         var lastFoodType = settings.LastFoodType switch
         {
-            PetFoodType.None or PetFoodType.Apple or PetFoodType.Carrot or PetFoodType.Pellet => settings.LastFoodType,
+            PetFoodType.None or PetFoodType.Apple or PetFoodType.Carrot or PetFoodType.Pellet or PetFoodType.Broccoli or PetFoodType.BokChoy => settings.LastFoodType,
             _ => PetFoodType.None
         };
         var lastFedUtc = settings.LastFedUtc?.ToUniversalTime();
@@ -304,6 +304,8 @@ internal sealed class PetFoodTypeJsonConverter : JsonConverter<PetFoodType>
             PetFoodType.Apple => "apple",
             PetFoodType.Carrot => "carrot",
             PetFoodType.Pellet => "pellet",
+            PetFoodType.Broccoli => "broccoli",
+            PetFoodType.BokChoy => "bokChoy",
             _ => "none"
         });
     }

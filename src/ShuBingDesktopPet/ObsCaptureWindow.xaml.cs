@@ -28,6 +28,7 @@ public partial class ObsCaptureWindow : Window
     private PetSettings _settings;
     private PetAction? _reaction;
     private bool _feedingActive;
+    private int _feedingFrameColumn;
     private PetFoodType _activeFood = PetFoodType.None;
 
     private const double SafeMarginPx = 12.0;
@@ -116,11 +117,12 @@ public partial class ObsCaptureWindow : Window
         }
     }
 
-    public void ApplyPetState(PetAction? reaction, bool feedingActive, PetFoodType activeFood)
+    public void ApplyPetState(PetAction? reaction, bool feedingActive, PetFoodType activeFood, int feedingFrameColumn = 0)
     {
         _reaction = reaction;
         _feedingActive = feedingActive;
         _activeFood = feedingActive ? activeFood : PetFoodType.None;
+        _feedingFrameColumn = Math.Clamp(feedingFrameColumn, 0, 5);
     }
 
     public void RepositionOffscreen() => PlaceWindowOffscreen();
@@ -235,7 +237,7 @@ public partial class ObsCaptureWindow : Window
 
     private void OnTick(object? sender, EventArgs e)
     {
-        var deltaMs = Math.Max(1.0, _clock.Elapsed.TotalMilliseconds);
+        var deltaMs = Math.Clamp(_clock.Elapsed.TotalMilliseconds, 0, 100);
         _clock.Restart();
 
         UpdateRoaming(deltaMs);
@@ -384,7 +386,7 @@ public partial class ObsCaptureWindow : Window
         }
 
         var feedingFrame = _reaction == PetAction.Feed && _feedingActive
-            ? _feedingFrameCache.GetFrame(_activeFood, boundedCol)
+            ? _feedingFrameCache.GetFrame(_activeFood, _feedingFrameColumn)
             : null;
         var isLongBodyWalk = _walkingBodyFrameCache.IsAvailable &&
             _settings.WalkingBodyStyle == WalkingBodyStyle.LongBody &&

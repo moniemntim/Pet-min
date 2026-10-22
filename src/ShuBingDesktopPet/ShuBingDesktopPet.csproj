@@ -8,9 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ShuBingDesktopPet</RootNamespace>
     <AssemblyName>ShuBingDesktopPet</AssemblyName>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.2.0-rc.2</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <ApplicationIcon>Assets\ShuBingDesktopPet.ico</ApplicationIcon>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
@@ -27,9 +27,13 @@
     <None Remove="Assets\Feeding\Apple\**\*" />
     <None Remove="Assets\Feeding\Carrot\**\*" />
     <None Remove="Assets\Feeding\Pellet\**\*" />
+    <None Remove="Assets\Feeding\Broccoli\**\*" />
+    <None Remove="Assets\Feeding\BokChoy\**\*" />
     <Resource Include="Assets\Feeding\Apple\**\*" />
     <Resource Include="Assets\Feeding\Carrot\**\*" />
     <Resource Include="Assets\Feeding\Pellet\**\*" />
+    <Resource Include="Assets\Feeding\Broccoli\**\*" />
+    <Resource Include="Assets\Feeding\BokChoy\**\*" />
     <None Remove="Assets\Walking\LongBody\**\*" />
     <Resource Include="Assets\Walking\LongBody\**\*" />
   </ItemGroup>

@@ -51,6 +51,31 @@ public static class PetGeometry
         return rect.Contains(windowPoint);
     }
 
+    public static Rect GetAuthoredHeadZone(Rect frameBounds, int row, bool longBody)
+    {
+        if (frameBounds.Width <= 0 || frameBounds.Height <= 0)
+        {
+            return Rect.Empty;
+        }
+
+        var baseWidth = longBody ? 256.0 : 192.0;
+        var zone = longBody
+            ? row == 1 ? new Rect(140, 65, 90, 75) : new Rect(25, 65, 90, 75)
+            : row switch
+            {
+                1 => new Rect(100, 65, 80, 75),
+                2 => new Rect(15, 65, 85, 75),
+                9 or 10 => new Rect(45, 40, 105, 95),
+                _ => new Rect(15, 55, 95, 80)
+            };
+
+        return new Rect(
+            frameBounds.Left + zone.Left / baseWidth * frameBounds.Width,
+            frameBounds.Top + zone.Top / 208.0 * frameBounds.Height,
+            zone.Width / baseWidth * frameBounds.Width,
+            zone.Height / 208.0 * frameBounds.Height);
+    }
+
     public static Rect ClampRectToWorkArea(Rect candidate, Rect workArea, double frameWidth, double frameHeight, double insetPx = 0)
     {
         var bounds = RoamingBoundary.GetSafeMovementBounds(workArea, frameWidth, frameHeight, insetPx);
