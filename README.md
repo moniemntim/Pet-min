@@ -1,8 +1,12 @@
 # 薯餅桌寵
 
-目前版本：`v1.1.0` 正式版（Twitch Bits／頻道點數／OBS 擷取整合）；`v1.0.0` 為餵食功能前穩定基準。
+目前版本：`v1.2.0` 正式版（統一尺度動畫、小白菜／花椰菜餵食、Twitch Bits／頻道點數／OBS 擷取整合）；`v1.1.0` 保留為前一正式版，`v1.0.0` 為餵食功能前穩定基準。
 
 以 97 張薯餅照片與 3 段影片作為共同參考，製作 Windows 10/11 寫實桌面寵物。
+
+## 1.2.0 正式版
+
+從 [GitHub Release 下載 Windows x64 可攜版](https://github.com/moniemntim/Pet-min/releases/tag/v1.2.0)，解壓縮後執行 EXE。本機輸出位於 `dist/ShuBingDesktopPet-v1.2.0-win-x64`。若需重建，請執行 Release 測試與 win-x64 自包含發佈命令；完整流程見 [版本控制與發佈規範](docs/versioning.md)。本版保留前一版步態與大小，僅進行腳底對齊微調，並保留小白菜、花椰菜、其他動作、餵食時序、設定相容性與桌面／OBS 同步。
 
 ## 1.2.0-rc.3 候選版
 
@@ -21,7 +25,7 @@
 ## 1.2.0-rc.1 候選版
 
 候選素材、預覽與可攜版候選輸出位於 `dist/ShuBingDesktopPet-refresh-20261023`；動畫預覽見
-`pet-art/refresh-20261023/preview.html`。目前正式版仍為 `v1.1.0`，本節描述的是候選內容，尚未宣告為正式發行版。
+`pet-art/refresh-20261023/preview.html`。此候選版製作時的正式版為 `v1.1.0`；本節保留當時的候選內容紀錄。
 
 ## 功能
 
