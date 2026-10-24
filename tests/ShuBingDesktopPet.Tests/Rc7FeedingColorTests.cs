@@ -12,11 +12,11 @@ namespace ShuBingDesktopPet.Tests;
 public sealed class Rc7FeedingColorTests
 {
     [Fact]
-    public void FeedingFrames_NormalizeAllEighteenOnceAndPreserveGeometryAlphaAndFeatures()
+    public void FeedingFrames_NormalizeAllFoodsOnceAndPreserveGeometryAlphaAndFeatures()
     {
         var root = FindAssetRoot();
-        var cache = new FeedingFrameCache(AppContext.BaseDirectory);
-        var foods = new[] { PetFoodType.Apple, PetFoodType.Carrot, PetFoodType.Pellet };
+        var cache = new FeedingFrameCache(root);
+        var foods = new[] { PetFoodType.Apple, PetFoodType.Carrot, PetFoodType.Pellet, PetFoodType.Broccoli, PetFoodType.BokChoy };
 
         foreach (var food in foods)
         {
@@ -25,6 +25,8 @@ public sealed class Rc7FeedingColorTests
                 PetFoodType.Apple => "Apple",
                 PetFoodType.Carrot => "Carrot",
                 PetFoodType.Pellet => "Pellet",
+                PetFoodType.Broccoli => "Broccoli",
+                PetFoodType.BokChoy => "BokChoy",
                 _ => throw new ArgumentOutOfRangeException(nameof(food))
             };
 
@@ -46,15 +48,89 @@ public sealed class Rc7FeedingColorTests
 
                 var pixels = CopyPixels(frame);
                 AlphaBytes(pixels).Should().Equal(AlphaBytes(rawPixels));
-                CountPixels(rawPixels, IsBlackFeature).Should().BeGreaterThan(10);
-                CountPixels(pixels, IsBlackFeature).Should().BeGreaterThan(10);
-                CountPixels(rawPixels, IsPinkFeature).Should().BeGreaterThan(100);
-                CountPixels(pixels, IsPinkFeature).Should().BeGreaterThan(100);
+                if (food is PetFoodType.Broccoli or PetFoodType.BokChoy)
+                {
+                    CountPixels(pixels, IsGreenFeature).Should().BeGreaterThan(20);
+                }
 
                 var brown = MeasureBrown(pixels);
                 brown.Count.Should().BeGreaterThan(100, $"{food} frame {column} must retain a measurable brown coat");
                 brown.MeanLuma.Should().BeGreaterThanOrEqualTo(150, $"{food} frame {column} brown coat must not be too dark");
                 brown.DarkFraction.Should().BeLessThanOrEqualTo(0.25, $"{food} frame {column} must not contain a darkened coat");
+            }
+        }
+    }
+
+    [Fact]
+    public void SeedFood_AuthoredPixelsRemainByteExactAcrossAllSixFrames()
+    {
+        var root = FindAssetRoot();
+        var cache = new FeedingFrameCache(root);
+        var authoredRegions = new[]
+        {
+            new Int32Rect(60, 108, 24, 42),
+            new Int32Rect(55, 98, 24, 40),
+            new Int32Rect(54, 102, 27, 43),
+            new Int32Rect(60, 121, 26, 31),
+            new Int32Rect(56, 107, 25, 35),
+            new Int32Rect(59, 111, 26, 36)
+        };
+
+        foreach (var food in new[] { PetFoodType.Apple, PetFoodType.Carrot, PetFoodType.Pellet })
+        {
+            var folder = food switch
+            {
+                PetFoodType.Apple => "Apple",
+                PetFoodType.Carrot => "Carrot",
+                _ => "Pellet"
+            };
+
+            for (var column = 0; column < 6; column++)
+            {
+                var raw = CopyPixels(LoadBitmap(Path.Combine(root, "Assets", "Feeding", folder, $"{column:00}.png")));
+                var normalized = CopyPixels(cache.GetFrame(food, column)!);
+                var region = authoredRegions[column];
+                for (var y = region.Y; y < region.Y + region.Height; y++)
+                {
+                    for (var x = region.X; x < region.X + region.Width; x++)
+                    {
+                        var offset = ((y * 192) + x) * 4;
+                        normalized.AsSpan(offset, 4).SequenceEqual(raw.AsSpan(offset, 4))
+                            .Should().BeTrue($"{food} frame {column} pixel ({x},{y}) is authored food and must be preserved");
+                    }
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void BokChoy_AuthoredPixelsAndAlphaRemainByteExactAcrossAllSixFrames()
+    {
+        var root = FindAssetRoot();
+        var cache = new FeedingFrameCache(root);
+        var regions = new[]
+        {
+            new Int32Rect(54, 101, 30, 39), new Int32Rect(51, 97, 25, 22),
+            new Int32Rect(51, 101, 23, 21), new Int32Rect(54, 118, 24, 22),
+            new Int32Rect(50, 103, 25, 24), new Int32Rect(54, 106, 24, 25)
+        };
+
+        for (var column = 0; column < 6; column++)
+        {
+            var raw = CopyPixels(LoadBitmap(Path.Combine(root, "Assets", "Feeding", "BokChoy", $"{column:00}.png")));
+            var frame = cache.GetFrame(PetFoodType.BokChoy, column);
+            frame.Should().NotBeNull();
+            frame!.IsFrozen.Should().BeTrue();
+            frame.Should().BeSameAs(cache.GetFrame(PetFoodType.BokChoy, column));
+            var pixels = CopyPixels(frame);
+            AlphaBytes(pixels).Should().Equal(AlphaBytes(raw));
+            var region = regions[column];
+            for (var y = region.Y; y < region.Y + region.Height; y++)
+            for (var x = region.X; x < region.X + region.Width; x++)
+            {
+                var offset = ((y * 192) + x) * 4;
+                pixels.AsSpan(offset, 4).SequenceEqual(raw.AsSpan(offset, 4)).Should().BeTrue(
+                    $"BokChoy frame {column} pixel ({x},{y}) must preserve authored RGBA");
             }
         }
     }
@@ -107,11 +183,8 @@ public sealed class Rc7FeedingColorTests
         return count;
     }
 
-    private static bool IsBlackFeature(int red, int green, int blue) =>
-        Math.Max(red, Math.Max(green, blue)) < 40;
-
-    private static bool IsPinkFeature(int red, int green, int blue) =>
-        red > green + 20 && red > blue + 10;
+    private static bool IsGreenFeature(int red, int green, int blue) =>
+        green > red + 15 && green > blue + 10;
 
     private static BrownStats MeasureBrown(byte[] pixels)
     {

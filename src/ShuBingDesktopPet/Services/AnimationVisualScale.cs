@@ -6,12 +6,9 @@ public static class AnimationVisualScale
 {
     public static AnimationFrameScale GetFrameScale(int row)
     {
-        return row switch
-        {
-            6 => new AnimationFrameScale(0.69, 0.69),
-            7 => new AnimationFrameScale(0.60, 0.60),
-            10 => new AnimationFrameScale(1.17, 1.17),
-            _ => new AnimationFrameScale(1.0, 1.0)
-        };
+        // Every atlas row is authored on the same 192x208 canvas and already
+        // uses the shared character scale.  Keep this transform neutral so a
+        // pose cannot become larger or smaller merely by changing rows.
+        return new AnimationFrameScale(1.0, 1.0);
     }
 }

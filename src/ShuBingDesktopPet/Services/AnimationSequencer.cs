@@ -31,6 +31,7 @@ public sealed class AnimationSequencer
         _rowOneShotCache = false;
         _fixedColumnCache = -1;
         CompletedOneShot = false;
+        _finished = false;
     }
 
     public void ApplyPlan(AnimationPlan plan, AnimationRowSpec rowSpec)
@@ -49,6 +50,16 @@ public sealed class AnimationSequencer
             _column = 0;
             _elapsedMs = 0;
             CompletedOneShot = false;
+            _finished = false;
+        }
+
+        // A malformed asset must never make the render loop throw (in particular,
+        // Math.Clamp rejects a range whose maximum is -1).
+        if (!rowSpec.IsValid(_frameCount))
+        {
+            _column = 0;
+            _elapsedMs = 0;
+            return;
         }
 
         if (plan.FixedColumn >= 0)
@@ -63,49 +74,107 @@ public sealed class AnimationSequencer
 
     public void Tick(double deltaMs, AnimationRowSpec rowSpec)
     {
-        if (_frameCount <= 0 || !rowSpec.IsValid(_frameCount))
+        // Completion is an event for the current tick; _finished is the state
+        // that keeps a one-shot parked on its final frame afterwards.
+        CompletedOneShot = false;
+        if (_frameCount <= 0 || !rowSpec.IsValid(_frameCount) || !double.IsFinite(deltaMs) || deltaMs <= 0)
         {
             return;
         }
 
-        CompletedOneShot = false;
+        if (_finished)
+        {
+            return;
+        }
+
         if (_plan.FixedColumn >= 0)
         {
             _column = Math.Clamp(_plan.FixedColumn, 0, _frameCount - 1);
             return;
         }
 
-        _elapsedMs += deltaMs;
-        while (_elapsedMs >= rowSpec.Durations[Math.Min(_column, rowSpec.Durations.Length - 1)])
+        if (_plan.Loop && !_plan.IsOneShot)
         {
-            _elapsedMs -= rowSpec.Durations[Math.Min(_column, rowSpec.Durations.Length - 1)];
+            AdvanceLoop(deltaMs, rowSpec);
+            return;
+        }
 
+        // Non-looping plans cross at most one boundary per frame, so even a very
+        // large (but finite) timer delta remains bounded and deterministic.
+        var remaining = rowSpec.Durations[_column] - _elapsedMs;
+        if (deltaMs < remaining)
+        {
+            _elapsedMs += deltaMs;
+            return;
+        }
+
+        var budget = deltaMs - remaining;
+        while (true)
+        {
             if (_column + 1 < _frameCount)
             {
                 _column++;
+                var duration = rowSpec.Durations[_column];
+                if (budget < duration)
+                {
+                    _elapsedMs = budget;
+                    return;
+                }
+
+                budget -= duration;
                 continue;
             }
 
+            _elapsedMs = 0;
             if (_plan.IsOneShot)
             {
                 CompletedOneShot = true;
+                _finished = true;
                 return;
             }
 
-            if (_plan.Loop)
-            {
-                _column = 0;
-            }
-            else
-            {
-                _column = _frameCount - 1;
-            }
+            // A non-looping, non-one-shot plan simply remains on its last frame.
+            return;
         }
+    }
+
+    private void AdvanceLoop(double deltaMs, AnimationRowSpec rowSpec)
+    {
+        long cycleMs = 0;
+        for (var i = 0; i < _frameCount; i++)
+        {
+            cycleMs += rowSpec.Durations[i];
+        }
+
+        var cycle = (double)cycleMs;
+        var position = _elapsedMs;
+        for (var i = 0; i < _column; i++)
+        {
+            position += rowSpec.Durations[i];
+        }
+
+        position = (position + (deltaMs % cycle)) % cycle;
+        for (var i = 0; i < _frameCount; i++)
+        {
+            if (position < rowSpec.Durations[i])
+            {
+                _column = i;
+                _elapsedMs = position;
+                return;
+            }
+
+            position -= rowSpec.Durations[i];
+        }
+
+        // Modulo can land on the cycle endpoint due to floating point rounding.
+        _column = 0;
+        _elapsedMs = 0;
     }
 
     private bool _rowLoopCache;
     private bool _rowOneShotCache;
     private int _fixedColumnCache;
+    private bool _finished;
 }
 
 public static class AnimationRowSpecExtensions
@@ -117,7 +186,7 @@ public static class AnimationRowSpecExtensions
             return false;
         }
 
-        if (spec.Durations.Length == 0)
+        if (spec.Durations is null || spec.Durations.Length < frameCount)
         {
             return false;
         }
@@ -127,6 +196,6 @@ public static class AnimationRowSpecExtensions
             return false;
         }
 
-        return true;
+        return spec.Durations.All(duration => duration > 0);
     }
 }

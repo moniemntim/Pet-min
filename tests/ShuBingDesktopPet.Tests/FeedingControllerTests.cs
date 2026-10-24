@@ -12,6 +12,8 @@ public class FeedingControllerTests
     [InlineData(PetFoodType.Apple)]
     [InlineData(PetFoodType.Carrot)]
     [InlineData(PetFoodType.Pellet)]
+    [InlineData(PetFoodType.Broccoli)]
+    [InlineData(PetFoodType.BokChoy)]
     public void FeedingController_EachSupportedFoodCanStart(PetFoodType food)
     {
         var controller = new FeedingController();
@@ -21,7 +23,7 @@ public class FeedingControllerTests
     }
 
     [Fact]
-    public void FeedingController_AcceptsOnlyThreeFoodTypes()
+    public void FeedingController_AcceptsOnlySupportedFoodTypes()
     {
         var controller = new FeedingController();
         var now = DateTime.UtcNow;
@@ -33,6 +35,8 @@ public class FeedingControllerTests
 
         controller.Cancel();
         controller.TryStart((PetFoodType)999, now, isBusy: false).Should().BeFalse();
+
+        controller.TryStart(PetFoodType.Broccoli, now.AddSeconds(7), isBusy: false).Should().BeTrue();
     }
 
     [Fact]

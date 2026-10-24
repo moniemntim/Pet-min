@@ -59,7 +59,18 @@ public sealed class WalkingBodyFrameCache
                 image.StreamSource = memory;
                 image.EndInit();
                 image.Freeze();
-                return image;
+                // Long-body frames are independent assets, so normalize them
+                // once at load time just like the atlas and feeding frames.
+                // Keep the decoded image as a safe fallback if a malformed
+                // frame makes palette normalization fail.
+                try
+                {
+                    return CoatPaletteNormalizer.Normalize(image);
+                }
+                catch
+                {
+                    return image;
+                }
             }
         }
         catch { return null; }

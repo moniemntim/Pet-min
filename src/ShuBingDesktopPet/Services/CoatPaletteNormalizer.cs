@@ -11,7 +11,7 @@ public static class CoatPaletteNormalizer
     private const int CellHeight = 208;
     private const byte MinimumLuma = 58;
 
-    public static BitmapSource Normalize(BitmapSource source)
+    public static BitmapSource Normalize(BitmapSource source, Int32Rect? excludedRegion = null)
     {
         ArgumentNullException.ThrowIfNull(source);
         var bgra = ToBgra32(source);
@@ -32,7 +32,7 @@ public static class CoatPaletteNormalizer
             var y = isAtlasGrid ? row * CellHeight : 0;
             var cellWidth = isAtlasGrid ? CellWidth : width;
             var cellHeight = isAtlasGrid ? CellHeight : height;
-            NormalizeCell(pixels, stride, x, y, cellWidth, cellHeight);
+            NormalizeCell(pixels, stride, x, y, cellWidth, cellHeight, excludedRegion);
         }
 
         var result = new WriteableBitmap(width, height, bgra.DpiX, bgra.DpiY, PixelFormats.Bgra32, null);
@@ -41,13 +41,14 @@ public static class CoatPaletteNormalizer
         return result;
     }
 
-    private static void NormalizeCell(byte[] pixels, int stride, int x0, int y0, int width, int height)
+    private static void NormalizeCell(byte[] pixels, int stride, int x0, int y0, int width, int height, Int32Rect? excludedRegion)
     {
         double brownWeight = 0, brownR = 0, brownG = 0, brownB = 0;
         double whiteWeight = 0, whiteR = 0, whiteG = 0, whiteB = 0;
         for (var y = y0; y < y0 + height; y++)
         for (var x = x0; x < x0 + width; x++)
         {
+            if (IsExcluded(excludedRegion, x, y)) continue;
             var i = y * stride + x * 4;
             var b = pixels[i]; var g = pixels[i + 1]; var r = pixels[i + 2];
             if (pixels[i + 3] == 0) continue;
@@ -59,18 +60,20 @@ public static class CoatPaletteNormalizer
             whiteWeight += white; whiteR += r * white; whiteG += g * white; whiteB += b * white;
         }
 
-        // The slight headroom below the video swatch compensates for the
-        // low-confidence fur-edge pixels included by the soft mask.
-        var dr = brownWeight > 0.01 ? Math.Clamp(192 - brownR / brownWeight, -60, 48) : 0;
-        var dg = brownWeight > 0.01 ? Math.Clamp(146 - brownG / brownWeight, -60, 48) : 0;
-        var db = brownWeight > 0.01 ? Math.Clamp(120 - brownB / brownWeight, -60, 48) : 0;
-        var wr = whiteWeight > 0.01 ? Math.Clamp(236 - whiteR / whiteWeight, -24, 30) : 0;
-        var wg = whiteWeight > 0.01 ? Math.Clamp(223 - whiteG / whiteWeight, -24, 30) : 0;
-        var wb = whiteWeight > 0.01 ? Math.Clamp(223 - whiteB / whiteWeight, -24, 30) : 0;
+        // Shared neutral taupe/ivory targets visually calibrated against the
+        // photo references. Keeping these targets identical across atlas, feeding,
+        // and long-body caches prevents a visible orange cast on transitions.
+        var dr = brownWeight > 0.01 ? Math.Clamp(181 - brownR / brownWeight, -60, 48) : 0;
+        var dg = brownWeight > 0.01 ? Math.Clamp(156 - brownG / brownWeight, -60, 48) : 0;
+        var db = brownWeight > 0.01 ? Math.Clamp(133 - brownB / brownWeight, -60, 48) : 0;
+        var wr = whiteWeight > 0.01 ? Math.Clamp(237 - whiteR / whiteWeight, -24, 30) : 0;
+        var wg = whiteWeight > 0.01 ? Math.Clamp(234 - whiteG / whiteWeight, -24, 30) : 0;
+        var wb = whiteWeight > 0.01 ? Math.Clamp(228 - whiteB / whiteWeight, -24, 30) : 0;
 
         for (var y = y0; y < y0 + height; y++)
         for (var x = x0; x < x0 + width; x++)
         {
+            if (IsExcluded(excludedRegion, x, y)) continue;
             var i = y * stride + x * 4;
             var b = pixels[i]; var g = pixels[i + 1]; var r = pixels[i + 2];
             if (pixels[i + 3] == 0) continue;
@@ -92,6 +95,11 @@ public static class CoatPaletteNormalizer
             }
         }
     }
+
+    private static bool IsExcluded(Int32Rect? region, int x, int y) =>
+        region is { } rect
+        && x >= rect.X && x < rect.X + rect.Width
+        && y >= rect.Y && y < rect.Y + rect.Height;
 
     private static double BrownWeight(byte r, byte g, byte b)
     {

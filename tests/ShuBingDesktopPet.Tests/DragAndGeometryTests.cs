@@ -62,6 +62,35 @@ public class DragAndGeometryTests
         PetGeometry.IsInHeadZone(bounds, point).Should().Be(expected);
     }
 
+    [Theory]
+    [InlineData(0.75)]
+    [InlineData(1.0)]
+    [InlineData(1.5)]
+    public void AuthoredHeadZone_ScalesWithFrameAndUsesDirectionalCoordinates(double scale)
+    {
+        var bounds = new Rect(0, 0, 192 * scale, 208 * scale);
+        var right = PetGeometry.GetAuthoredHeadZone(bounds, 1, longBody: false);
+        var left = PetGeometry.GetAuthoredHeadZone(bounds, 2, longBody: false);
+
+        right.Contains(new Point((100 + 40) * scale, 100 * scale)).Should().BeTrue();
+        left.Contains(new Point((15 + 40) * scale, 100 * scale)).Should().BeTrue();
+        right.Contains(new Point(40 * scale, 100 * scale)).Should().BeFalse();
+        right.Top.Should().BeApproximately(65 * scale, 0.001);
+    }
+
+    [Fact]
+    public void AuthoredHeadZone_LongBodyAndGazeStayWithinCanvasAndExcludeTransparentTop()
+    {
+        var longRight = PetGeometry.GetAuthoredHeadZone(new Rect(0, 0, 256, 208), 1, longBody: true);
+        longRight.Contains(new Point(180, 100)).Should().BeTrue();
+        longRight.Contains(new Point(80, 20)).Should().BeFalse();
+
+        var gaze = PetGeometry.GetAuthoredHeadZone(new Rect(12, 0, 288, 312), 9, longBody: false);
+        gaze.Left.Should().BeGreaterThan(12);
+        gaze.Right.Should().BeLessThan(300);
+        gaze.Top.Should().BeGreaterThan(0);
+    }
+
     [Fact]
     public void Direction16FromMouse_CoversAll16Directions()
     {
